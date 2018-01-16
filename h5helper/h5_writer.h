@@ -8,7 +8,7 @@
 #define RANK  2
 
 
-herr_t write_h5_data(char *filename, float *data, int dim0, int dim1) {
+herr_t write_h5_data(char *filename, double *data, int dim0, int dim1) {
     hsize_t     dims[2];   
  
     hid_t       file_id, dataset_id;        /* handles */
@@ -24,10 +24,10 @@ herr_t write_h5_data(char *filename, float *data, int dim0, int dim1) {
 
     dataspace_id = H5Screate_simple(RANK, dims, NULL); 
 
-    dataset_id = H5Dcreate2 (file_id, DATASETNAME, H5T_NATIVE_FLOAT, dataspace_id,
+    dataset_id = H5Dcreate2 (file_id, DATASETNAME, H5T_NATIVE_DOUBLE, dataspace_id,
                             H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 
-    status = H5Dwrite (dataset_id, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+    status = H5Dwrite (dataset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
 
     status = H5Sclose (dataspace_id);
     status = H5Dclose (dataset_id);
