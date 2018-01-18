@@ -52,16 +52,14 @@ def print_results(pred, truth):
 
 def train(data_dir, N = 20):
     # save the best model after each epoch
-    checkpoint = ModelCheckpoint("classifier.h5", monitor='val_loss', verbose=1, save_best_only=True, mode='min')
+    checkpoint = ModelCheckpoint("classifier.h5")
     train_X, train_y = get_training_data(data_dir, N)
-    #model = create_dnn()
-    #model.fit(train_X, train_y, epochs=2, validation_split=0.25, verbose=2, callbacks=[checkpoint])
-    #model.save('detector.h5')
+    model = create_dnn()
+    model.fit(train_X, train_y, epochs=2, validation_split=0.25, verbose=2, callbacks=[checkpoint])
 
     # Load existing model and continue to train
-    model = load_model('detector.h5')
-    model.fit(train_X, train_y, epochs=5, validation_split=0.25, verbose=2)
-    model.save('detector.h5')
+    #model = load_model('detector.h5')
+    #model.fit(train_X, train_y, epochs=5, validation_split=0.25, verbose=2, callbacks=[checkpoint])
 
 
 def evaluation(data_dir, N = 1):
@@ -71,7 +69,10 @@ def evaluation(data_dir, N = 1):
     pred = model.predict(eva_X)
     print_results(pred, eva_y)
 
-#train("data", N = 30)
-#evaluation("data")
-train("data_new", N = 10)
-evaluation("data_new")
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print "classifier.py data_dir N"
+    else :
+        train(sys.argv[1], N=1)
+        evaluation(sys.argv[1])

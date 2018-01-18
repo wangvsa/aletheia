@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
@@ -53,17 +54,14 @@ def print_results(pred, real):
 
 def train(data_dir, N=20):
     # save the best model after each epoch
-    checkpoint = ModelCheckpoint("classifier.h5", monitor='val_acc', verbose=1, save_best_only=True, mode='max')
-
+    checkpoint = ModelCheckpoint("classifier.h5")
     train_X, train_y = get_training_data(data_dir, N)
-    #model = create_dnn()
+    model = create_dnn()
     model.fit(train_X, train_y, epochs=3, validation_split=0.25, verbose=2, callbacks=[checkpoint])
-    #model.save('classifier.h5')
 
     # Load existing model and continue to train
-    model = load_model('classifier.h5')
-    model.fit(train_X, train_y, epochs=3, validation_split=0.25, verbose=2, callbacks=[checkpoint])
-    model.save('classifier.h5')
+    #model = load_model('classifier.h5')
+    #model.fit(train_X, train_y, epochs=3, validation_split=0.25, verbose=2, callbacks=[checkpoint])
 
 def evaluation(data_dir, N=1):
     print "Evaluating..."
@@ -72,6 +70,9 @@ def evaluation(data_dir, N=1):
     pred = model.predict(eva_X)
     print_results(np.round(pred), eva_y)
 
-
-#train("data_new", N=1)
-evaluation("data_new")
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print "classifier.py data_dir N"
+    else :
+        train(sys.argv[1], N=1)
+        evaluation(sys.argv[1])
