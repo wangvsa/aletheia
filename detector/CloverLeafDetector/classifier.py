@@ -16,12 +16,13 @@ INPUT_COLS = 50
 def create_dnn():
     model = Sequential([
             Conv2D(46, (3,3), input_shape=(INPUT_ROWS, INPUT_COLS, 1), activation='relu'),
-            Conv2D(46, (3,3), activation='relu'),
+            #Conv2D(46, (3,3), activation='relu'),
             Dropout(0.2),
             Flatten(),
             Dense(1, activation='sigmoid')    # last layer output 0 or 1
     ])
     model.compile('adadelta', 'binary_crossentropy')
+    #model.compile('sgd', 'binary_crossentropy', metrics=['accuracy'])
     return model
 
 def get_training_data(data_dir, N):
@@ -56,12 +57,12 @@ def train(data_dir, N=20):
     # save the best model after each epoch
     checkpoint = ModelCheckpoint("classifier.h5")
     train_X, train_y = get_training_data(data_dir, N)
-    model = create_dnn()
-    model.fit(train_X, train_y, epochs=3, validation_split=0.25, verbose=2, callbacks=[checkpoint])
+    #model = create_dnn()
+    #model.fit(train_X, train_y, epochs=10, validation_split=0.25, verbose=2, callbacks=[checkpoint])
 
     # Load existing model and continue to train
-    #model = load_model('classifier.h5')
-    #model.fit(train_X, train_y, epochs=3, validation_split=0.25, verbose=2, callbacks=[checkpoint])
+    model = load_model('classifier.h5')
+    model.fit(train_X, train_y, epochs=3, validation_split=0.25, verbose=2, callbacks=[checkpoint])
 
 def evaluation(data_dir, N=1):
     print "Evaluating..."
@@ -74,5 +75,5 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         print "classifier.py data_dir N"
     else :
-        train(sys.argv[1], N=1)
+        train(sys.argv[1], int(sys.argv[2]))
         evaluation(sys.argv[1])

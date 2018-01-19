@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
@@ -15,7 +16,7 @@ INPUT_COLS = 50
 def create_dnn():
     model = Sequential([
             Conv2D(46, (3,3), input_shape=(INPUT_ROWS, INPUT_COLS, 1), activation='relu'),
-            Conv2D(46, (3,3), activation='relu'),
+            #Conv2D(46, (3,3), activation='relu'),
             Dropout(0.2),
             Flatten(),
             Dense(2)    # last layer output the position of the error
@@ -52,14 +53,14 @@ def print_results(pred, truth):
 
 def train(data_dir, N = 20):
     # save the best model after each epoch
-    checkpoint = ModelCheckpoint("classifier.h5")
+    checkpoint = ModelCheckpoint("detector.h5")
     train_X, train_y = get_training_data(data_dir, N)
-    model = create_dnn()
-    model.fit(train_X, train_y, epochs=2, validation_split=0.25, verbose=2, callbacks=[checkpoint])
+    #model = create_dnn()
+    #model.fit(train_X, train_y, epochs=2, validation_split=0.25, verbose=2, callbacks=[checkpoint])
 
     # Load existing model and continue to train
-    #model = load_model('detector.h5')
-    #model.fit(train_X, train_y, epochs=5, validation_split=0.25, verbose=2, callbacks=[checkpoint])
+    model = load_model('detector.h5')
+    model.fit(train_X, train_y, epochs=40, validation_split=0.25, verbose=2, callbacks=[checkpoint])
 
 
 def evaluation(data_dir, N = 1):
@@ -74,5 +75,5 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         print "classifier.py data_dir N"
     else :
-        train(sys.argv[1], N=1)
+        train(sys.argv[1], int(sys.argv[2]))
         evaluation(sys.argv[1])

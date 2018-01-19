@@ -51,7 +51,6 @@ def preprocess_for_classifier(dataset, N = 10):
             #dataset[i][x, y] = min(dataset[i][x,y], 2.5)
             #dataset[i][x, y] = max(dataset[i][x,y], 0)
             sign = sign * -1
-            #dataset[i][x, y] = 1
     return dataset, has_error
 
 # Copy the dataset N times and inject errors
