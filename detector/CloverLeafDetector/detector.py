@@ -60,7 +60,7 @@ def train(data_dir, N = 20):
 
     # Load existing model and continue to train
     model = load_model('detector.h5')
-    model.fit(train_X, train_y, epochs=40, validation_split=0.25, verbose=2, callbacks=[checkpoint])
+    model.fit(train_X, train_y, epochs=50, validation_split=0.25, verbose=2, callbacks=[checkpoint], batch_size=256)
 
 
 def evaluation(data_dir, N = 1):
