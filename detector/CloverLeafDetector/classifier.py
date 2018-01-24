@@ -62,7 +62,7 @@ def train(data_dir, N=20):
 
     # Load existing model and continue to train
     model = load_model('classifier.h5')
-    model.fit(train_X, train_y, epochs=3, validation_split=0.25, verbose=2, callbacks=[checkpoint])
+    model.fit(train_X, train_y, epochs=10, validation_split=0.25, verbose=2, callbacks=[checkpoint])
 
 def evaluation(data_dir, N=1):
     print "Evaluating..."
