@@ -2,18 +2,17 @@ import bitstring
 
 
 # Flip a bit of a given position
-# bin_str: input, string
-def bit_flip(bin_str, pos):
+# val: input, python float(64 bits), equals double in C
+def bit_flip(val, pos):
+
+    bin_str = bitstring.BitArray(float=val, length=64).bin
+
     l = list(bin_str)
     l[pos] = '1' if l[pos] == '0' else '0'
-    flip_str = "".join(l)
-    return flip_str
+    flipped_str = "".join(l)
 
-# 64 bits binary string to float
-# method 1, use bitstring
-def bin_to_float(bin_str):
-    f = bitstring.BitArray(bin=bin_str)
-    return f.float
+    return bitstring.BitArray(bin=flipped_str).float
+
 
 # 64 bits binary string to float
 # method 2, use struct pack and unpack
@@ -25,11 +24,6 @@ def as_float64(bin_str):
     from struct import pack,unpack
     return unpack("d", pack("L", x))
 
-
-f = bitstring.BitArray(float=1.0, length=64)
-bin_str = f.bin
-print "before:", bin_str, ", float:", bin_to_float(bin_str)
-
+val = 1.0
 for i in range(64):
-    flip_str = bit_flip(bin_str, i)
-    print i, ',', bin_to_float(flip_str), ',', as_float64(flip_str)
+    print i, ':', bit_flip(val, i)
