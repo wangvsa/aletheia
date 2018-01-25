@@ -20,6 +20,8 @@ def show_heatmap(filename):
 
 def show_heatmap_animation(dataset_dir, save_path=None):
     fig = plt.figure()
+    # Set margins, remove extra space
+    fig.subplots_adjust(left=0, right=1, top=0.95, bottom=0.05)
     ims = []
     for filename in glob.iglob(dataset_dir+"/*.h5"):
         data = hdf5_to_numpy(filename)

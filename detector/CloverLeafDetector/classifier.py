@@ -63,7 +63,7 @@ def train(data_dir, N=20):
 
     # Load existing model and continue to train
     model = load_model('classifier.h5')
-    model.fit(train_X, train_y, epochs=10, validation_split=0.25, verbose=2, callbacks=[checkpoint])
+    model.fit(train_X, train_y, epochs=3, validation_split=0.25, verbose=2, callbacks=[checkpoint])
 
 def evaluation(data_dir, N=1):
     print "Evaluating..."
@@ -72,9 +72,19 @@ def evaluation(data_dir, N=1):
     pred = model.predict(eva_X)
     print_results(np.round(pred), eva_y)
 
+def predict(hdf5_file):
+    model = load_model('classifier.h5')
+    frame = preprocess.hdf5_to_numpy(hdf5_file)
+    blocks = preprocess.split_to_blocks(frame, INPUT_ROWS, INPUT_COLS)
+    X = np.array(blocks)
+    X = X.reshape(X.shape+(1,))
+    print(model.predict(X))
+
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print "classifier.py data_dir N"
     else :
         #train(sys.argv[1], int(sys.argv[2]))
-        evaluation(sys.argv[1])
+        #evaluation(sys.argv[1])
+        predict(sys.argv[1])

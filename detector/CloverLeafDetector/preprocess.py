@@ -49,11 +49,10 @@ def preprocess_for_classifier(dataset, N = 10):
             y = random.randint(0, dataset[i].shape[1]-1)
             has_error[i] = 1
 
-            d = dataset[i][x,y]
             '''
-            t = random.uniform(d, 5*d)
+            d = dataset[i][x,y]
+            error = random.uniform(0.01*d, 0.9*d)
             sign = 1 if random.randint(0,1) == 1 else -1
-            error = dataset[i][x,y] + t
             dataset[i][x,y] = error
             '''
 
