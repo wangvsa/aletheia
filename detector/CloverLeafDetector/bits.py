@@ -23,7 +23,3 @@ def as_float64(bin_str):
         x += bits[i]*2**i
     from struct import pack,unpack
     return unpack("d", pack("L", x))
-
-val = 0.1
-for i in range(64):
-    print i, ':', bit_flip(val, i)

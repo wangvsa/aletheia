@@ -29,16 +29,21 @@ def show_heatmap_animation(dataset_dir, save_path=None):
     ani = animation.ArtistAnimation(fig, ims, interval=100, blit=False, repeat_delay=1000)
 
     if save_path is not None:
+        '''
         matplotlib.use("Agg")
         Writer = animation.writers["ffmpeg"]
         writer = Writer(fps=30, metadata=dict(artist='Me'), bitrate=1800)
         ani.save(save_path, writer=writer)
+        '''
+        ani.save(save_path, fps=30)
 
     plt.show()
 
 
 
 if __name__ == "__main__":
+    if len(sys.argv) != 2 :
+        sys.exit("Usage: python plot dataset_directory")
     path = sys.argv[1]
     #show_heatmap(path)
-    show_heatmap_animation(path)
+    show_heatmap_animation(path, "test.mp4")
