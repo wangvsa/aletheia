@@ -1,4 +1,5 @@
 import sys
+import glob
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
@@ -72,14 +73,25 @@ def evaluation(data_dir, N=1):
     pred = model.predict(eva_X)
     print_results(np.round(pred), eva_y)
 
-def predict(hdf5_file):
+def predict(dataset_dir):
     model = load_model('classifier.h5')
-    frame = preprocess.hdf5_to_numpy(hdf5_file)
-    blocks = preprocess.split_to_blocks(frame, INPUT_ROWS, INPUT_COLS)
-    X = np.array(blocks)
-    X = X.reshape(X.shape+(1,))
-    print(model.predict(X))
-
+    paths = ["/*_51.h5", "/*_52.h5", "/*_53.h5", "/*_54.h5", "/*_55.h5",
+                "/*_56.h5", "/*_57.h5", "/*_58.h5", "/*_59.h5", "/*_60.h5",
+                "/*_61.h5", "/*_62.h5", "/*_63.h5", "/*_64.h5", "/*_65.h5",
+                "/*_66.h5", "/*_67.h5", "/*_68.h5", "/*_69.h5", "/*_70.h5",
+                "/*_71.h5", "/*_72.h5", "/*_73.h5", "/*_74.h5", "/*_75.h5"]
+    for path in paths:
+        total = 0; acc = 0
+        for filename in glob.iglob(dataset_dir+path):
+            total = total + 1.0
+            frame = preprocess.hdf5_to_numpy(filename)
+            blocks = preprocess.split_to_blocks(frame, INPUT_ROWS, INPUT_COLS)
+            X = np.array(blocks)
+            X = X.reshape(X.shape+(1,))
+            prediction = np.round(np.max(model.predict(X)))
+            acc = acc + prediction
+            #print filename, prediction
+        print path, ", acc: ", acc / total, ", total:", total
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
