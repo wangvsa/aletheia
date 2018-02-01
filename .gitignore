@@ -104,3 +104,6 @@ ENV/
 
 # hdf5 files
 *.h5
+
+# mp4 files
+*.mp4
