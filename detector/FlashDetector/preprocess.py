@@ -60,12 +60,13 @@ def preprocess_for_classifier(dataset, N = 1):
             if math.isnan(error) or math.isinf(error):
                 has_error[i] = 0
                 continue
-            if error < 0.0001:
-                error = 0.0001
+            #if error < 0.0001:
+            #    error = 0.0001
             if error > 5*d:
                 error = 5*d
             #print 'old:', dataset[i][x,y], ', pos:', bit_pos, ', new:', error
             dataset[i][x,y] = error
+        dataset[i] /= np.std(dataset[i])
     return dataset, has_error
 
 # Copy the dataset N times and inject errors

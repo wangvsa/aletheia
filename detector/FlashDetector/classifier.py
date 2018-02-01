@@ -1,4 +1,4 @@
-import sys
+import os
 import glob
 import numpy as np
 import matplotlib.pyplot as plt
@@ -55,21 +55,22 @@ def print_results(pred, real):
     print 'recall:', recall, ', precision:', precision, ', false positive rate:', fpr
 
 
-def train(data_dir, N=1, epochs=3):
+def train(model_file, data_dir, N, epochs):
     # save the best model after each epoch
-    checkpoint = ModelCheckpoint("classifier.h5")
+    checkpoint = ModelCheckpoint(model_file)
     train_X, train_y = get_training_data(data_dir, N)
-    model = create_dnn()
+
+    # Load existing model if exits
+    if os.path.isfile(model_file):
+        model = load_model(model_file)
+    else :
+        model = create_dnn()
     model.fit(train_X, train_y, epochs=epochs, validation_split=0.25, verbose=2, callbacks=[checkpoint])
 
-    # Load existing model and continue to train
-    #model = load_model('classifier.h5')
-    #model.fit(train_X, train_y, epochs=epochs, validation_split=0.25, verbose=2, callbacks=[checkpoint])
-
-def evaluation(data_dir, N=1):
+def evaluation(model_file, data_dir):
     print "Evaluating..."
-    eva_X, eva_y = get_training_data(data_dir, N)
-    model = load_model('classifier.h5')
+    eva_X, eva_y = get_training_data(data_dir, N=1)
+    model = load_model(model_file)
     pred = model.predict(eva_X)
     print_results(np.round(pred), eva_y)
 
