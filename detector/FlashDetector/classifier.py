@@ -41,7 +41,7 @@ def print_results(pred, real):
     no_error_count = 0
 
     for i in range(len(pred)):
-        if i < 20: print pred[i], "---", real[i]
+        #if i < 20: print pred[i], "---", real[i]
         if pred[i] == 1 and real[i] == 1 : tp = tp + 1      # true positive
         if pred[i] == 0 and real[i] == 0 : tn = tn + 1      # true negative
         if pred[i] == 1 and real[i] == 0 : fp = fp + 1      # false positive

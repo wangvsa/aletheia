@@ -40,7 +40,7 @@ def preprocess_for_classifier(dataset, N = 1):
     dataset = np.vstack([dataset] * N) #  copy the dataset N times
     has_error = np.zeros(len(dataset))
     sign = 1
-    THREASHOLD = 0.5
+    THREASHOLD = 0.1
     for i in range(len(dataset)):
         if random.randint(0, 1):
             x = random.randint(0, dataset[i].shape[0]-1)
@@ -49,19 +49,11 @@ def preprocess_for_classifier(dataset, N = 1):
 
             d = dataset[i][x,y]
 
-            ''' Old method to inject error
-            error = random.uniform(0.01*d, 0.9*d)
-            sign = 1 if random.randint(0,1) == 1 else -1
-            dataset[i][x,y] = error
-            '''
-
-            bit_pos = random.randint(1, 10)
+            bit_pos = random.randint(0, 63)
             error = bit_flip(dataset[i][x,y], bit_pos)
-            if math.isnan(error) or math.isinf(error):
+            if math.isnan(error) or math.isinf(error) or (abs(error-d)/d < THREASHOLD):
                 has_error[i] = 0
                 continue
-            #if error < 0.0001:
-            #    error = 0.0001
             if error > 5*d:
                 error = 5*d
             #print 'old:', dataset[i][x,y], ', pos:', bit_pos, ', new:', error
