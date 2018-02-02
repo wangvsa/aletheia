@@ -66,7 +66,10 @@ def preprocess_for_classifier(dataset, N = 1):
                 error = 5*d
             #print 'old:', dataset[i][x,y], ', pos:', bit_pos, ', new:', error
             dataset[i][x,y] = error
-        dataset[i] /= np.std(dataset[i])
+        #print("std:", np.std(dataset[i]), ", max:", np.max(dataset[i]), ", min:", np.min(dataset[i]))
+        std = np.std(dataset[i])
+        if std == 0: std = np.max(dataset[i])
+        dataset[i] = dataset[i] / std
     return dataset, has_error
 
 # Copy the dataset N times and inject errors
