@@ -109,3 +109,6 @@ ENV/
 *.mp4
 *.avi
 *.wmv
+
+# all data file
+data/
