@@ -1,4 +1,5 @@
 import os
+import math
 import glob
 import numpy as np
 import matplotlib.pyplot as plt
@@ -32,7 +33,7 @@ def get_training_data(data_dir, N):
     dataset, has_error = preprocess.preprocess_for_classifier(dataset, N)
     dataset = dataset.reshape(dataset.shape+(1,))
     print "dataset shape(X):", dataset.shape
-    print "hash error shape(Y):", has_error.shape
+    print "has error shape(Y):", has_error.shape
     return dataset, has_error
 
 def print_results(pred, real):
@@ -50,7 +51,7 @@ def print_results(pred, real):
     recall, precision, fpr  = 'NA', 'NA', 'NA'
     if tp+fn != 0: recall = tp/(tp+fn)
     if tp+fp != 0: precision = tp/(tp+fp)
-    if fp+tn != 0: fpr = fp/(fp+tn)
+    if fp+tn != 0: fpr = fp/len(pred) #fpr = fp/(fp+tn)
     print 'tp:', tp, 'tn:', tn, 'fp:', fp, 'fn:', fn
     print 'recall:', recall, ', precision:', precision, ', false positive rate:', fpr
 
@@ -67,33 +68,38 @@ def train(model_file, data_dir, N, epochs):
         model = create_dnn()
     model.fit(train_X, train_y, epochs=epochs, validation_split=0.25, verbose=2, callbacks=[checkpoint])
 
+def train_multi(model_file, train_X, train_y, epochs=10):
+    print train_X.shape, train_y.shape
+    # save the best model after each epoch
+    checkpoint = ModelCheckpoint(model_file)
+    # Load existing model if exits
+    if os.path.isfile(model_file):
+        model = load_model(model_file)
+    else :
+        model = create_dnn()
+    model.fit(train_X, train_y, epochs=epochs, validation_split=0.25, verbose=2, callbacks=[checkpoint])
+
 def evaluation(model_file, data_dir):
     print "Evaluating..."
-    eva_X, eva_y = get_training_data(data_dir, N=1)
+    dataset, has_error = preprocess.get_classifier_test_data(data_dir)
     model = load_model(model_file)
-    pred = model.predict(eva_X)
-    print_results(np.round(pred), eva_y)
+    pred = []
+    for frame in dataset:
+        X = frame.reshape(frame.shape+(1,))
+        pred.append(np.round(np.max(model.predict(X))))
+    print_results(pred, has_error)
 
 def predict(dataset_dir):
-    model = load_model('classifier.h5')
-    paths = ["/*_51.h5", "/*_52.h5", "/*_53.h5", "/*_54.h5", "/*_55.h5"]
-    for path in paths:
+    model = load_model('Sod_multi.h5')
+    for i in range(50):
         total = 0; acc = 0
-        for filename in glob.iglob(dataset_dir+path):
+        suffix = ("0000"+str(i))[-4:]
+        for filename in glob.iglob(dataset_dir+"*_"+suffix):
             total = total + 1.0
             frame = preprocess.hdf5_to_numpy(filename)
-            blocks = preprocess.split_to_blocks(frame, INPUT_ROWS, INPUT_COLS)
-            X = np.array(blocks)
-            X = X.reshape(X.shape+(1,))
-            prediction = np.round(np.max(model.predict(X)))
-            acc = acc + prediction
-            #print filename, prediction
-        print path, ", acc: ", acc / total, ", total:", total
+            X = frame.reshape(frame.shape+(1,))
 
-if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print "classifier.py data_dir N"
-    else :
-        #train(sys.argv[1], int(sys.argv[2]), 10)
-        evaluation(sys.argv[1])
-        #predict(sys.argv[1])
+            prediction = np.round(np.max(model.predict(X)))
+            if math.isnan(prediction): prediction = 1.0
+            acc = acc + prediction
+        print suffix, ", acc: ", acc / total, ", total:", total

@@ -1,4 +1,6 @@
 import sys
+import os
+import time
 import random
 
 def read_par_file(filename):
@@ -18,22 +20,40 @@ def write_par_file(filename, pars):
             line = key + "=" + str(value)
             f.write(line+"\n")
 
-def get_random_pars():
-    modify_pars = [("sim_rhoLeft", 0.0, 5.0), ("sim_rhoRight", 0.0, 5.0),
-     ("sim_pLeft", 0, 5.0), ("sim_pRight", 0.0, 5.0),
-     ("sim_uLeft", 0, 5.0), ("sim_uRight", 0.0, 5.0)]
+def get_random_pars(app):
+    # Sod
+    if app == "Sod":
+        modify_pars = [("sim_rhoLeft", 0.0, 5.0), ("sim_rhoRight", 0.0, 5.0),
+         ("sim_pLeft", 0, 5.0), ("sim_pRight", 0.0, 5.0),
+         ("sim_uLeft", 0, 5.0), ("sim_uRight", 0.0, 5.0)]
+
+    # Blast2
+    if app == "Blast2":
+        modify_pars = [("sim_rhoLeft", 0.0, 5.0), ("sim_rhoMid", 0.0, 5.0),("sim_rhoRight", 0.0, 5.0),
+         ("sim_pLeft", 0, 1000.0), ("sim_pMid", 0.0, 200), ("sim_pRight", 0.0, 200),
+         ("sim_uLeft", 0, 5.0), ("sim_uMid", 0.0, 5.0), ("sim_uRight", 0.0, 5.0)]
     return modify_pars
 
-def main(filename):
-    pars = read_par_file(filename)
-    modify_pars = get_random_pars()
+
+def run_flash_with_random_setting(app, flash_path, par_path):
+    pars = read_par_file(par_path)
+    modify_pars = get_random_pars(app)
 
     for par in modify_pars :
         pars[par[0]] = random.uniform(par[1], par[2])
 
-    write_par_file(filename, pars)
+    # change basenm and output directory
+    pars['basenm'] = "\""+ str(int(time.time())) + "\""
+    pars['output_directory'] = "\"./data/train/"+app+"\""
 
+    write_par_file(par_path, pars)
+
+    # Run Flash with the random initial conditions
+    os.system("mpirun -np 8 "+flash_path+" -par_file "+par_path)
 
 
 if __name__ == "__main__" :
-    main(sys.argv[1])
+    flash_path = sys.argv[1] + "/flash4"
+    par_path = sys.argv[1] + "/flash.par"
+    for _ in range(1):
+        run_flash_with_random_setting("Blast2", flash_path, par_path)
