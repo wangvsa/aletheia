@@ -1,85 +1,83 @@
-import commands
-import h5py
-import random
-import glob
+'''
+For generating flash.par files
+1. randomly set initial conditions in flash.par
+2. run the app to get data
+'''
+
+import sys
 import os
-from bits import bit_flip
-import math
+import time
+import random
 
-SOD_DIR = "/home/wangchen/Sources/FLASH4.4/objects/Sod_multi/"
-FLASH_APPS = ["Blast2", "BlastBS", "BrioWu", "Cellular",
-                "DMReflection", "RHD_Sod", "Sedov", "Sod"]
+def read_par_file(filename):
+    pars = {}
+    with open(filename) as lines:
+        for line in lines:
+            if "=" in line and not line.startswith("#"):
+                line = "".join(line.split())    # remove all whitespaces, e.g. \t\n
+                name = line.split("=")[0]
+                value = line.split("=")[1]
+                pars[name] = value
+    return pars
 
-par_file = SOD_DIR + "flash.par"
+def write_par_file(filename, pars):
+    with open(filename, "w") as f:
+        for key, value in pars.iteritems():
+            line = key + "=" + str(value)
+            f.write(line+"\n")
 
-# delete last two lines
-def delete_last_lines():
-    commands.getstatusoutput("head -n -2 " + par_file + " > tmp.par")
-    commands.getstatusoutput("mv tmp.par " + par_file)
+def get_random_pars(app):
+    # Sod
+    if app == "Sod":
+        modify_pars = [("sim_rhoLeft", 0.0, 5.0), ("sim_rhoRight", 0.0, 5.0),
+         ("sim_pLeft", 0, 5.0), ("sim_pRight", 0.0, 5.0),
+         ("sim_uLeft", 0, 5.0), ("sim_uRight", 0.0, 5.0)]
 
-def append_to_par(restart_point):
-    # Specify restart point
-    commands.getstatusoutput("echo checkpointFileNumber = " + str(restart_point) + " >> " + par_file)
-    # Specify end point
-    commands.getstatusoutput("echo nend = " + str(restart_point+10) + " >> " + par_file)
+    # Blast2
+    if app == "Blast2":
+        modify_pars = [("sim_rhoLeft", 0.0, 5.0), ("sim_rhoMid", 0.0, 5.0),("sim_rhoRight", 0.0, 5.0),
+         ("sim_pLeft", 0, 1000.0), ("sim_pMid", 0.0, 200), ("sim_pRight", 0.0, 200),
+         ("sim_uLeft", 0, 5.0), ("sim_uMid", 0.0, 5.0), ("sim_uRight", 0.0, 5.0)]
 
+    # BlastBS
+    if app == "BlastBS":
+        modify_pars = [("gamma", 1.0, 3.0), ("xCtr", 0.0, 5.0),
+         ("yCtr", 0, 5.0), ("Radius", 0.0, 1.0), ("Bx0", 50, 200)]
 
-def insert_error(restart_point):
-    filenumber = ("0000"+str(restart_point))[-4:]
-    checkpoint_file = SOD_DIR + "clean_checkpoints/sod_hdf5_chk_"+filenumber
-    commands.getstatusoutput("cp "+checkpoint_file+" "+SOD_DIR)
-    checkpoint_file = SOD_DIR + "sod_hdf5_chk_"+ filenumber
-    f = h5py.File(checkpoint_file, 'r+')
+    if app == "BrioWu":
+        modify_pars = [("rho_left", 0.0, 2), ("rho_right", 0.0, 2),
+         ("p_left", 0, 2), ("p_right", 0.0, 2), ("u_left", 0, 2), ("u_right", 0.0, 2),
+         ("v_left", 0, 2), ("v_right", 0.0, 2), ("w_left", 0, 2), ("w_right", 0.0, 2)]
 
-    blockId = random.randint(0, f['dens'].shape[0]-1)
-    x = random.randint(0, 7)
-    y = random.randint(0, 7)
-    org = f['dens'][blockId, 0, y, x]
+    if app == "Sedov":
+        modify_pars = [("sim_pAmbient", 0.0, 0.001), ("sim_rhoAmbient", 0.5, 3), ("sim_expEnergy", 0.5, 3),
+         ("sim_rInit", 0, 0.2), ("sim_xctr", 0.0, 2), ("sim_yctr", 0, 2), ("sim_zctr", 0.0, 2)]
 
-    bit = random.randint(1, 10)
-    error = bit_flip(org, bit)
-
-    if math.isnan(error) or math.isinf(error):
-        error = org * 5
-    if error > org * 5:
-        error = org * 5
-    f['dens'][blockId, 0, y, x] = error
-    f['dens'][blockId, 0, y, x] = 5*org
-    coordinate = list(f['coordinates'][blockId])
-    f.close()
-
-    basename = "sod_"+str([restart_point, blockId, x, y])+"_"+str(coordinate)+"_"
-    return basename
-
-
-def rename_plot_files(basename):
-    for filename in glob.iglob(SOD_DIR+"sod_hdf5_plt_cnt*"):
-        newname = SOD_DIR + basename + filename.split("/")[-1]
-        os.rename(filename, newname)
+    return modify_pars
 
 
-def test():
-    # Restart from checkpoint i
-    for restart_point in range(1000):
-        if restart_point == 100:
-        #if (restart_point-15) % 50 == 0:
-            # Insert error
-            basename = insert_error(restart_point)
+def run_flash_with_random_setting(app, flash_path, par_path):
+    pars = read_par_file(par_path)
+    modify_pars = get_random_pars(app)
 
-            # Modify par file to let it restart from given checkpoint
-            delete_last_lines()
-            append_to_par(restart_point)
+    for par in modify_pars :
+        pars[par[0]] = random.uniform(par[1], par[2])
 
-            # Restart the program
-            cmd = "cd "+ SOD_DIR +" && mpirun -np 8 ./flash4"
-            status = commands.getstatusoutput(cmd)[0]
-            rename_plot_files(basename)
+    # change basenm and output directory
+    pars['basenm'] = "\""+ str(int(time.time())) + "\""
+    #pars['output_directory'] = "\"./data/train/"+app+"\""
+    pars['output_directory'] = "\"./data/"+"\""
 
-            # CD back
-            commands.getstatusoutput("cd /home/wangchen/Sources/aletheia/detector/FlashDetector/")
+    write_par_file(par_path, pars)
 
-            print "restart at:", restart_point, ", status:", status
-            print basename
+    # Run Flash with the random initial conditions
+    os.system("mpirun -np 8 "+flash_path+" -par_file "+par_path)
 
-for i in range(1000):
-    test()
+
+if __name__ == "__main__" :
+    flash_path = sys.argv[1] + "/flash4"
+    par_path = sys.argv[1] + "/flash.par"
+
+    app = sys.argv[2]
+    for _ in range(1):
+        run_flash_with_random_setting(app, flash_path, par_path)
