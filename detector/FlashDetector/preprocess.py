@@ -69,11 +69,12 @@ def get_classifier_training_data(data_dir, rows, cols, overlap=0, N=1):
 
 
 
-def get_classifier_test_data(data_dir):
+def get_classifier_test_data(data_dir, rows, cols, overlap):
     dataset = []
     has_error = []
     for filename in glob.iglob(data_dir+"/*hdf5_plt_cnt*"):
         frame = hdf5_to_numpy(filename)
+        blocks = split_to_windows(frame, rows, cols, overlap)
         # Inser an error
         if random.randint(0, 1):
             blockId = random.randint(0, blocks.shape[0]-1)

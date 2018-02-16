@@ -12,8 +12,9 @@ from keras.layers import Dense, Activation, Dropout, Conv2D, Flatten
 from keras.optimizers import SGD
 from keras.callbacks import ModelCheckpoint
 
-INPUT_ROWS = 8
-INPUT_COLS = 8
+INPUT_ROWS = 50
+INPUT_COLS = 50
+OVERLAP = 0
 
 def create_dnn():
     model = Sequential([
@@ -27,14 +28,6 @@ def create_dnn():
     #model.compile('rmsprop', 'binary_crossentropy')
     #model.compile('sgd', 'binary_crossentropy', metrics=['accuracy'])
     return model
-
-def get_training_data(data_dir, N):
-    dataset = preprocess.read_hdf5_dataset(data_dir)
-    dataset, has_error = preprocess.preprocess_for_classifier(dataset, N)
-    dataset = dataset.reshape(dataset.shape+(1,))
-    print "dataset shape(X):", dataset.shape
-    print "has error shape(Y):", has_error.shape
-    return dataset, has_error
 
 def print_results(pred, real):
     # recall, false positive, true positive
@@ -59,14 +52,17 @@ def print_results(pred, real):
 def train(model_file, data_dir, N, epochs):
     # save the best model after each epoch
     checkpoint = ModelCheckpoint(model_file)
-    train_X, train_y = get_training_data(data_dir, N)
+    train_X, train_y = preprocess.get_classifier_training_data(data_dir, INPUT_ROWS, INPUT_COLS)
+    train_X = train_X.reshape(train_X.shape+(1,))
+    print "X shape:", train_X.shape
+    print "y shape:", train_y.shape
 
     # Load existing model if exits
     if os.path.isfile(model_file):
         model = load_model(model_file)
     else :
         model = create_dnn()
-    model.fit(train_X, train_y, epochs=epochs, validation_split=0.25, verbose=2, callbacks=[checkpoint])
+    model.fit(train_X, train_y, epochs=2, validation_split=0.25, verbose=2, callbacks=[checkpoint])
 
 def train_multi(model_file, train_X, train_y, epochs=10):
     print train_X.shape, train_y.shape
@@ -81,7 +77,7 @@ def train_multi(model_file, train_X, train_y, epochs=10):
 
 def evaluation(model_file, data_dir):
     print "Evaluating..."
-    dataset, has_error = preprocess.get_classifier_test_data(data_dir)
+    dataset, has_error = preprocess.get_classifier_test_data(data_dir, INPUT_ROWS, INPUT_COLS, 0)
     model = load_model(model_file)
     pred = []
     for frame in dataset:
