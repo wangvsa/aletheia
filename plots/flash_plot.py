@@ -22,15 +22,15 @@ def stack(data):
 
 def show_heatmap(filename):
     data = hdf5_to_numpy(filename)
+    print "dens:", data.shape, data
     data = stack(data)
+    print "dens:", data.shape, data
     plt.imshow(data, cmap='hot', interpolation='nearest')
     plt.show()
 
 
 def test(filename):
     data = hdf5_to_numpy(filename, "dens")
-    print "dens:", data.shape, data
-    data = stack(data)
     print "dens:", data.shape, data
 
     data = hdf5_to_numpy(filename, "coordinates")
@@ -44,5 +44,5 @@ if __name__ == "__main__":
     if len(sys.argv) != 2 :
         sys.exit("Usage: python flash_plot.py hdf5_plt_file_path")
     path = sys.argv[1]
-    show_heatmap(path)
-    #test(path)
+    #show_heatmap(path)
+    test(path)
