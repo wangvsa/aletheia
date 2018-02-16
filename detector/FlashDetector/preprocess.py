@@ -6,27 +6,36 @@ import glob
 import h5py
 import sys
 import random
-from bits import bit_flip
 import math
+from skimage.util.shape import view_as_windows
+from bits import bit_flip
 
 
 # Read from a hdf5 file to a numpy array
 def hdf5_to_numpy(filename, var_name="dens"):
     f = h5py.File(filename, 'r')
     data = f[var_name][:]
-    shape = data.shape
-    data = np.reshape(data, (shape[0], shape[2], shape[3]))
+    # Stack a shape of (N, 1, ny, nx) to shape (ny, N*nx)
+    data = np.hstack(np.vstack(data))
     return data
 
+def split_to_windows(frame, rows, cols, overlap):
+    step = cols - overlap
+    windows = view_as_windows(frame, (rows, cols), step = step)
+    return np.vstack(windows)
+
 # Read all hdf5 files in a given directory
-def read_hdf5_dataset(directory):
+# Each frame is splited into blocks with overlap
+def read_hdf5_dataset(directory, rows, cols, overlap=0):
     dataset = None
     for filename in glob.iglob(directory+"/*hdf5_plt_cnt*"):
+        frame = hdf5_to_numpy(filename)
+        print "frame shape: ", frame.shape
+        windows = split_to_windows(frame, rows, cols, overlap)
         if dataset is None :
-            dataset = hdf5_to_numpy(filename)
+            dataset = windows
         else :
-            blocks = hdf5_to_numpy(filename)
-            dataset = np.vstack((dataset, blocks))
+            dataset = np.vstack((dataset, windows))
     return dataset
 
 def get_classifier_test_data(data_dir):
@@ -34,14 +43,14 @@ def get_classifier_test_data(data_dir):
     has_error = []
     for filename in glob.iglob(data_dir+"/*hdf5_plt_cnt*"):
 
-        blocks= hdf5_to_numpy(filename)
+        frame = hdf5_to_numpy(filename)
 
         # Inser an error
         if random.randint(0, 1):
             blockId = random.randint(0, blocks.shape[0]-1)
             x = random.randint(0, blocks.shape[1]-1)
             y = random.randint(0, blocks.shape[2]-1)
-            bit_pos = random.randint(0, 10)
+            bit_pos = random.randint(0, 15)
             error = bit_flip(blocks[blockId][x,y], bit_pos)
             if math.isnan(error) or math.isinf(error):
                 has_error.append(0)
@@ -77,7 +86,7 @@ def preprocess_for_classifier(dataset, N = 1):
             d_max = np.max(dataset[i])
             d_min = np.min(dataset[i])
 
-            bit_pos = random.randint(0, 10)
+            bit_pos = random.randint(0, 15)
             error = bit_flip(dataset[i][x,y], bit_pos)
             if math.isnan(error) or math.isinf(error): # or (abs(error/d-1) < THREASHOLD):
                 has_error[i] = 0
