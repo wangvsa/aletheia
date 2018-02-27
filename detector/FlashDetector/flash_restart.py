@@ -77,7 +77,4 @@ def test():
             cmd = "cd "+ BASE_DIR +" && mpirun -np 8 ./flash4 -par_file "+new_par_file
             os.system(cmd)
 
-            # CD back
-            os.system("cd /home/wangchen/Sources/aletheia/detector/FlashDetector/")
-
 test()
