@@ -85,6 +85,7 @@ def generate_random_pars(idx):
     # Run Flash with the random initial conditions
     os.system("cp "+app_dir+"flash4 "+new_flash_path)
     os.system("cd "+random_data_dir+"&& mpirun -np 8 "+new_flash_path+" -par_file "+new_par_path)
+    #os.system("cd "+random_data_dir+"&& aprun -n 8 -N 8 "+new_flash_path+" -par_file "+new_par_path)
 
 
 '''
