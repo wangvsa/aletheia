@@ -12,16 +12,15 @@ import flash_par
 FLASH_APPS = ["Blast2", "BlastBS", "BrioWu", "Cellular",
                 "DMReflection", "RHD_Sod", "Sedov", "Sod"]
 
-BASE_DIR = "/home/wangchen/tmp/data_0/"
-par_file = BASE_DIR + "flash.par"
-
 
 '''
 Copy par file
 Modify it so we can restart from the given corrupted checkpoint
 Also set the nend to 10 timesteps after restarting
 '''
-def modify_par_file(basenm, restart_point):
+def modify_par_file(data_dir, basenm, restart_point):
+    par_file = data_dir + "flash.par"
+
     pars = flash_par.read_par_file(par_file)
     pars['basenm'] = "\""+basenm+"\""
     pars['nend'] = str(restart_point+10)
@@ -37,7 +36,7 @@ Copy a clean checkpoint
 Insert an error into the copied file
 Return the basenm which contains the error info: restart_point,x,y,bit
 '''
-def insert_error(restart_point):
+def insert_error(data_dir, restart_point):
     x = random.randint(0, 1000-1)
     y = random.randint(0, 1000-1)
     bit = random.randint(0, 10-1)
@@ -45,8 +44,8 @@ def insert_error(restart_point):
 
     filenumber = ("0000"+str(restart_point))[-4:]
     basenm = "error_%s_%s_%s_%s_" %(restart_point, x, y, bit)
-    clean_checkpoint_file = BASE_DIR + "hdf5_chk_"+filenumber
-    corrupted_checkpoint_file = BASE_DIR+basenm+"hdf5_chk_"+filenumber
+    clean_checkpoint_file = data_dir + "hdf5_chk_"+filenumber
+    corrupted_checkpoint_file = data_dir + basenm + "hdf5_chk_" + filenumber
 
     # Copy a corrupted checkpoint file
     os.system("cp "+clean_checkpoint_file+" "+corrupted_checkpoint_file)
@@ -64,17 +63,19 @@ def insert_error(restart_point):
 
     return basenm
 
-def test():
-    # Restart from checkpoint i
-    for restart_point in range(10):
-        if restart_point == 5:
+def restart(data_dir):
+    for restart_point in range(0, 20, 10): # 0~200, step=150
+        basename = insert_error(data_dir, restart_point)
 
-            basename = insert_error(restart_point)
+        new_par_file = modify_par_file(data_dir, basename, restart_point)
 
-            new_par_file = modify_par_file(basename, restart_point)
+        # Restart the program
+        cmd = "cd "+ data_dir +" && mpirun -np 8 ./flash4 -par_file "+new_par_file
+        #cmd = "cd "+ data_dir +" && aprun -n 8 -N 8 ./flash4 -par_file "+new_par_file
+        os.system(cmd)
 
-            # Restart the program
-            cmd = "cd "+ BASE_DIR +" && mpirun -np 8 ./flash4 -par_file "+new_par_file
-            os.system(cmd)
 
-test()
+if __name__ == "__main__":
+    # restart from different initial condtions
+    for data_dir in glob.glob("/home/wangchen/tmp/data_*/"):
+        restart(data_dir)
