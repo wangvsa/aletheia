@@ -64,15 +64,18 @@ def insert_error(data_dir, restart_point):
     return basenm
 
 def restart(data_dir):
-    for restart_point in range(0, 20, 10): # 0~200, step=150
+    for restart_point in range(0, 20, 10): # 0~200, step=20
         basename = insert_error(data_dir, restart_point)
 
         new_par_file = modify_par_file(data_dir, basename, restart_point)
 
+        # Just generate the corrupted data and the par file
+        # Don't run the program, let pbs script to run the program
+
         # Restart the program
-        cmd = "cd "+ data_dir +" && mpirun -np 8 ./flash4 -par_file "+new_par_file
+        #cmd = "cd "+ data_dir +" && mpirun -np 8 ./flash4 -par_file "+new_par_file
         #cmd = "cd "+ data_dir +" && aprun -n 8 -N 8 ./flash4 -par_file "+new_par_file
-        os.system(cmd)
+        #os.system(cmd)
 
 
 if __name__ == "__main__":
