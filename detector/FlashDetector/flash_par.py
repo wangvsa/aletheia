@@ -52,8 +52,8 @@ def get_random_pars(app):
 
     # Sedov
     if app == "Sedov":
-        modify_pars = [("sim_pAmbient", 0.0, 0.001), ("sim_rhoAmbient", 0.5, 3), ("sim_expEnergy", 0.5, 3),
-         ("sim_rInit", 0, 0.2), ("sim_xctr", 0.0, 2), ("sim_yctr", 0, 2), ("sim_zctr", 0.0, 2)]
+        modify_pars = [("sim_pAmbient", 1.0e-5, 9.0e-5), ("sim_rhoAmbient", 0.5, 1.5), ("sim_expEnergy", 0.5, 1.5),
+         ("sim_rInit", 0.01, 0.02), ("sim_xctr", 0.2, 0.8), ("sim_yctr", 0.2, 0.8), ("sim_zctr", 0.2, 0.8)]
 
     return modify_pars
 
@@ -84,7 +84,7 @@ def generate_random_pars(idx):
 
     # Run Flash with the random initial conditions
     os.system("cp "+app_dir+"flash4 "+new_flash_path)
-    os.system("cd "+random_data_dir+"&& mpirun -np 8 "+new_flash_path+" -par_file "+new_par_path)
+    #os.system("cd "+random_data_dir+"&& mpirun -np 8 "+new_flash_path+" -par_file "+new_par_path)
     #os.system("cd "+random_data_dir+"&& aprun -n 8 -N 8 "+new_flash_path+" -par_file "+new_par_path)
 
 
