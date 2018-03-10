@@ -29,9 +29,9 @@ def write_par_file(filename, pars):
 def get_random_pars(app):
     # Sod
     if app == "Sod":
-        modify_pars = [("sim_rhoLeft", 0.0, 5.0), ("sim_rhoRight", 0.0, 5.0),
-         ("sim_pLeft", 0, 5.0), ("sim_pRight", 0.0, 5.0),
-         ("sim_uLeft", 0, 5.0), ("sim_uRight", 0.0, 5.0)]
+        modify_pars = [("sim_rhoLeft", 0.2, 1.3), ("sim_rhoRight", 0.100, 0.150),
+         ("sim_pLeft", 0.7, 1.3), ("sim_pRight", 0.05, 0.15),
+         ("sim_uLeft", 0.0, 0.2), ("sim_uRight", 0.0, 0.2)]
 
     # Blast2
     if app == "Blast2":
@@ -70,13 +70,14 @@ def generate_random_pars(idx):
     pars = read_par_file(org_par_file)
     modified_pars = get_random_pars(app_name)
 
-    for par in modified_pars:
-        pars[par[0]] = random.uniform(par[1], par[2])
-    #pars['output_directory'] = "\"./data/"+"\""
-
-    random_data_dir  = app_dir + "data_" + str(idx)
+    random_data_dir  = app_dir + "data_" + ("00"+str(idx))[-2:]     # data_xx, e.g. data_01
     new_par_path = random_data_dir + "/flash.par"
     new_flash_path = random_data_dir + "/flash4"
+
+    for par in modified_pars:
+        pars[par[0]] = random.uniform(par[1], par[2])
+    pars['output_directory'] = "\""+random_data_dir+"\""
+
 
     # Create directory and write the randomly generated new par file
     os.system("mkdir "+ random_data_dir)
@@ -84,8 +85,6 @@ def generate_random_pars(idx):
 
     # Run Flash with the random initial conditions
     os.system("cp "+app_dir+"flash4 "+new_flash_path)
-    #os.system("cd "+random_data_dir+"&& mpirun -np 8 "+new_flash_path+" -par_file "+new_par_path)
-    #os.system("cd "+random_data_dir+"&& aprun -n 8 -N 8 "+new_flash_path+" -par_file "+new_par_path)
 
 
 '''
@@ -99,5 +98,5 @@ Then the program will run under each of these directories to
 generate clean checkpoint data
 '''
 if __name__ == "__main__" :
-    for i in range(2):
+    for i in range(30):
         generate_random_pars(i)

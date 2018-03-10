@@ -7,93 +7,86 @@ import h5py
 import sys
 import random
 import math
-from skimage.util.shape import view_as_windows
-from bits import bit_flip
+import os
+from skimage.util.shape import view_as_windows, view_as_blocks
 
 
 # Read from a hdf5 file to a numpy array
 def hdf5_to_numpy(filename, var_name="dens"):
     f = h5py.File(filename, 'r')
-    data = f[var_name][:]
-    # Stack a shape of (N, 1, ny, nx) to shape (ny, N*nx)
-    data = np.hstack(np.vstack(data))
+    # Stack a shape of (1, 1, ny, nx) to shape (ny, nx)
+    data = f[var_name][0, 0]
     return data
 
 def split_to_windows(frame, rows, cols, overlap):
     step = cols - overlap
     windows = view_as_windows(frame, (rows, cols), step = step)
     return np.vstack(windows)
+def split_to_blocks(frame, rows, cols):
+    blocks = view_as_blocks(frame, (rows, cols))
+    return np.vstack(blocks)
+
+def get_error_data(data_dir, rows, cols, overlap):
+    dataset = []
+    for filename in glob.iglob(data_dir+"/error_*hdf5_plt_cnt_*"):
+    #for filename in glob.iglob(data_dir+"/error_0_hdf5_plt_cnt_*"):
+        if 'forced' in filename or 'plt_cnt_0021' in filename:
+            os.system('rm '+filename)
+            continue
+
+        dens = hdf5_to_numpy(filename, 'dens')
+        temp = hdf5_to_numpy(filename, 'temp')
+        pres = hdf5_to_numpy(filename, 'pres')
+
+        #shape of (N, rows, cols)
+        dens_blocks = split_to_windows(dens, rows, cols, overlap)
+        temp_blocks = split_to_windows(temp, rows, cols, overlap)
+        pres_blocks = split_to_windows(pres, rows, cols, overlap)
+        #dens_blocks /= np.std(dens_blocks, axis=0)
+        #temp_blocks /= np.std(temp_blocks, axis=0)
+        #pres_blocks /= np.std(pres_blocks, axis=0)
+
+        # combile to 3 channels, shape of (N, 3, rows, cols)
+        tmp = np.swapaxes( np.array([dens_blocks, temp_blocks, pres_blocks]), 0, 1)
+        print filename, dens_blocks.shape, tmp.shape
+        dataset.append(tmp)
+    dataset = np.vstack(dataset)
+    print "dataset shape:", dataset.shape
+    output_file = data_dir.split('/')[-2]
+    np.save(output_file, dataset)
+
 
 # Read all hdf5 files in a given directory
 # Each frame is splited into blocks with overlap
-def get_classifier_training_data(data_dir, rows, cols, overlap=0, N=1):
-    dataset = None
-    for filename in glob.iglob(data_dir+"/*hdf5_plt_cnt*"):
-        frame = hdf5_to_numpy(filename)
-        windows = split_to_windows(frame, rows, cols, overlap)
-        if dataset is None :
-            dataset = windows
-        else :
-            dataset = np.vstack((dataset, windows))
-
-    dataset = np.vstack([dataset] * N) #  copy the dataset N times
-    has_error = np.zeros(len(dataset))
-    THREASHOLD = 0.01
-    for i in range(len(dataset)):
-        if random.randint(0, 10)==5:
-            x = random.randint(0, dataset[i].shape[0]-1)
-            y = random.randint(0, dataset[i].shape[1]-1)
-
-            has_error[i] = 1
-
-            d = dataset[i][x,y]
-            d_max = np.max(dataset[i])
-            d_min = np.min(dataset[i])
-
-            bit_pos = random.randint(0, 15)
-            error = bit_flip(dataset[i][x,y], bit_pos)
-            if math.isnan(error) or math.isinf(error): # or (abs(error/d-1) < THREASHOLD):
-                has_error[i] = 0
-                continue
-
-            # Limit error withim [d_min/5, d_max*5]
-            error = min(10e+5, error)
-            error = max(-10e+5, error)
-
-            #print 'old:', dataset[i][x,y], ', pos:', bit_pos, ', new:', error
-            dataset[i][x,y] = error
-        std = np.std(dataset[i])
-        if std == 0: std = np.max(dataset[i])
-        dataset[i] = dataset[i] / std
-    return dataset, has_error
-
-
-
-def get_classifier_test_data(data_dir, rows, cols, overlap):
+def get_clean_data(data_dir, rows, cols, overlap):
     dataset = []
-    has_error = []
-    for filename in glob.iglob(data_dir+"/*hdf5_plt_cnt*"):
-        frame = hdf5_to_numpy(filename)
-        blocks = split_to_windows(frame, rows, cols, overlap)
-        # Inser an error
-        if random.randint(0, 1):
-            blockId = random.randint(0, blocks.shape[0]-1)
-            x = random.randint(0, blocks.shape[1]-1)
-            y = random.randint(0, blocks.shape[2]-1)
-            bit_pos = random.randint(0, 15)
-            error = bit_flip(blocks[blockId][x,y], bit_pos)
-            if math.isnan(error) or math.isinf(error):
-                has_error.append(0)
-            else:
-                error = min(error, 10e+10)
-                blocks[blockId][x,y] = error
-                has_error.append(1)
-        else:
-            has_error.append(0)
+    for filename in glob.iglob(data_dir+"/sod_hdf5_chk_*"):
+        dens = hdf5_to_numpy(filename, 'dens')
+        temp = hdf5_to_numpy(filename, 'temp')
+        pres = hdf5_to_numpy(filename, 'pres')
 
-        std = np.std(blocks)
-        if std == 0: std = np.max(blocks)
-        blocks = blocks / std
-        dataset.append(blocks)
+        dens_blocks = split_to_windows(dens, rows, cols, overlap)  #shape of (N, rows, cols)
+        temp_blocks = split_to_windows(temp, rows, cols, overlap)
+        pres_blocks = split_to_windows(pres, rows, cols, overlap)
+        dens_blocks /= np.std(dens_blocks, axis=0)
+        temp_blocks /= np.std(temp_blocks, axis=0)
+        pres_blocks /= np.std(pres_blocks, axis=0)
 
-    return dataset, has_error
+        # combile to 3 channels, shape of (N, 3, rows, cols)
+        tmp = np.swapaxes( np.array([dens_blocks, temp_blocks, pres_blocks]), 0, 1)
+        print filename
+        print dens_blocks.shape, tmp.shape
+        dataset.append(tmp)
+    dataset = np.vstack(dataset)
+    print "dataset shape:", dataset.shape
+    output_file = data_dir.split('/')[-2]
+    np.save(output_file, dataset)
+
+def test_min_max(data_dir):
+    for filename in glob.iglob(data_dir+"/*.npy"):
+        data = np.load(filename)
+        print filename, data.shape, ', min:', np.unravel_index(np.argmin(data), data.shape), 'max:',  np.unravel_index(np.argmax(data), data.shape)
+
+#get_clean_data(sys.argv[1], 60, 60, 20)
+get_error_data(sys.argv[1], 60, 60, 20)
+#test_min_max(sys.argv[1])

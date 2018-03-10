@@ -12,13 +12,13 @@ from keras.layers import Dense, Activation, Dropout, Conv2D, Flatten
 from keras.optimizers import SGD
 from keras.callbacks import ModelCheckpoint
 
-INPUT_ROWS = 50
-INPUT_COLS = 50
-OVERLAP = 0
+INPUT_ROWS = 60
+INPUT_COLS = 60
+OVERLAP = 20
 
 def create_dnn():
     model = Sequential([
-            Conv2D(46, (3,3), input_shape=(INPUT_ROWS, INPUT_COLS, 1), activation='relu'),
+            Conv2D(46, (3,3), input_shape=(INPUT_ROWS, INPUT_COLS, 3), activation='relu'),
             #Conv2D(46, (3,3), activation='relu'),
             Dropout(0.2),
             Flatten(),
