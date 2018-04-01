@@ -17,7 +17,7 @@ FLASH_APPS = ["Blast2", "BlastBS", "BrioWu", "Cellular",
 
 def get_flip_error(val):
     while True:
-        pos = random.randint(41, 50)
+        pos = random.randint(0, 20)
         error =  bit_flip(val, pos)
         if not math.isnan(error) and not math.isinf(error):
             break
@@ -36,14 +36,14 @@ def modify_par_file(data_dir, basenm, restart_point):
 
     pars = flash_par.read_par_file(par_file)
     pars['basenm'] = "\""+basenm+"\""
-    pars['nend'] = str(restart_point+19)
+    pars['nend'] = str(restart_point+4)
     pars['checkpointFileNumber'] = str(restart_point)
     pars['restart'] = ".true."
 
     # output plot file is enough
     # no need to ouput checkpoint file
     pars['checkpointFileIntervalStep'] = "0"
-    pars['plotfileIntervalStep'] = "5"
+    pars['plotfileIntervalStep'] = "1"
 
     new_par_file = par_file + "." + basenm[:-1] + ".new_par" # remove the last _, "new_par" just easy for my pbs script to handle
     flash_par.write_par_file(new_par_file, pars)
