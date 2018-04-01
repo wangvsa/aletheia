@@ -112,3 +112,6 @@ ENV/
 
 # all data file
 data/
+
+# all numpy data file
+*.npy
