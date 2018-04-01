@@ -3,9 +3,9 @@ import random
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
-T = 3000                    # total number of iterations
-ROWS = 20                   # rows of the plate
-COLUMNS= 20                 # columns of the plate
+T = 200                     # total number of iterations
+ROWS = 480                   # rows of the plate
+COLUMNS= 480                 # columns of the plate
 HEATING_DEVICE_SIZE = 3     # the length of the heating source
 
 # heating device shaped like X
