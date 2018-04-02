@@ -2,6 +2,7 @@ import numpy as np
 import random
 import sys
 import math
+import argparse
 from skimage.util.shape import view_as_windows, view_as_blocks
 from bits import bit_flip
 
@@ -113,15 +114,21 @@ def heat_distribution(interval = 1, error_iter=None, multiple_error=True):
         # Dump to file
         if error_iter is None or i >= error_iter:
             if i % interval == 0:
-                filename = str(i)+".npy"
+                filename = str(error_iter)+"_"+str(i)+".npy"
                 print("save to file: %s" %(filename))
                 dump_data_file(frame, filename, SAVE_WINDOWS)
 
 
 if __name__ == "__main__":
-    if len(sys.argv) == 2:
-        error_iter = int(sys.argv[1])
-        heat_distribution(interval=SAVE_INTERVAL, error_iter=error_iter)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-t", "--iteration", type=int, help="total iterations to run")
+    parser.add_argument("-e", "--error_iter", type=int, help="Insert error at given iteration")
+    args = parser.parse_args()
+    print args
+
+    if args.iteration: T = args.iteration
+    if args.error_iter:
+        heat_distribution(interval=SAVE_INTERVAL, error_iter=args.error_iter)
     else:
         heat_distribution(interval=SAVE_INTERVAL)
 
