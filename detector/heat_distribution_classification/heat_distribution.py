@@ -2,8 +2,6 @@ import numpy as np
 import random
 import sys
 import math
-import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
 from skimage.util.shape import view_as_windows, view_as_blocks
 from bits import bit_flip
 
@@ -91,7 +89,7 @@ def insert_error(frame, multiple=True):
 # error_iter: insert error at this iteration
 # multiple_error: whether to insert multiple errors
 def heat_distribution(interval = 1, error_iter=None, multiple_error=True):
-    frame = np.zeros((ROWS, COLUMNS))
+    frame = np.zeros((ROWS, COLUMNS))+2
     frame = assert_heaters(frame, Gr)
     for i in range(0, T):
 

@@ -162,7 +162,7 @@ def training(model, train_loader):
     loss_func = nn.BCELoss()
 
     running_loss = 0
-    for epoch in range(5):
+    for epoch in range(10):
         for i, data in enumerate(train_loader):
             inputs, labels = data
             if torch.cuda.is_available():
@@ -208,7 +208,7 @@ def evaluating(model, test_loader):
 
 
 def main():
-    model_file = "./mytorch2.model"
+    model_file = "./mytorch.model"
     model = None
     if os.path.isfile(model_file):
         print "load"
@@ -226,8 +226,8 @@ def main():
 
     trainset = HeatDistDataset('/home/chenw/sources/aletheia/detector/heat_distribution_classification/data')
     train_loader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE, shuffle=True, num_workers=8)
-    #testset = HeatDistDataset('/u/sciteam/wang23/sources/train/')
-    #test_loader = torch.utils.data.DataLoader(testset, batch_size=128, shuffle=False)
+    testset = HeatDistDataset('/home/chenw/sources/aletheia/detector/heat_distribution_classification/data')
+    test_loader = torch.utils.data.DataLoader(testset, batch_size=BATCH_SIZE, shuffle=True, num_workers=8)
 
     training(model, train_loader)
     torch.save(model, model_file)

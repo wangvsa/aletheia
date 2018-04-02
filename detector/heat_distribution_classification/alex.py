@@ -178,12 +178,12 @@ if __name__ == "__main__":
 
     trainset = HeatDistDataset('/home/chenw/sources/aletheia/detector/heat_distribution_classification/data')
     train_loader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE, shuffle=True, num_workers=8)
-    #testset = HeatDistDataset('/home/chenw/sources/train/')
-    #test_loader = torch.utils.data.DataLoader(testset, batch_size=128, shuffle=False, num_workers=8)
+    testset = HeatDistDataset('/home/chenw/sources/aletheia/detector/heat_distribution_classification/data')
+    test_loader = torch.utils.data.DataLoader(testset, batch_size=128, shuffle=False, num_workers=8)
 
     training(model, train_loader)
     torch.save(model, model_file)
-    evaluating(model, train_loader)
+    evaluating(model, test_loader)
 
     '''
     for error_data_file in glob.iglob("/home/chenw/sources/test/error3/data_11_0to20*.npy"):
