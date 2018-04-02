@@ -111,10 +111,12 @@ def heat_distribution(interval = 1, error_iter=None, multiple_error=True):
         frame = assert_heaters(frame, Gr)
 
         # Dump to file
-        if i % interval == 0:
-            filename = str(i)+".npy"
-            print("save to file: %s" %(filename))
-            dump_data_file(frame, filename, SAVE_WINDOWS)
+        if error_iter is None or i >= error_iter:
+            if i % interval == 0:
+                filename = str(i)+".npy"
+                print("save to file: %s" %(filename))
+                dump_data_file(frame, filename, SAVE_WINDOWS)
+
 
 if __name__ == "__main__":
     if len(sys.argv) == 2:
