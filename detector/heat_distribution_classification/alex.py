@@ -9,7 +9,7 @@ import random
 from bits import bit_flip
 
 BATCH_SIZE = 64
-CONV_INPUT_SHAPE = (3, 60, 60)
+CONV_INPUT_SHAPE = (1, 60, 60)
 variables = ['dens', 'temp', 'pres']
 
 def get_flip_error(val):
@@ -18,38 +18,39 @@ def get_flip_error(val):
         error =  bit_flip(val, pos)
         if not math.isnan(error) and not math.isinf(error):
             break
-    error = min(10e+3, error)
-    error = max(-10e+3, error)
+    #error = min(10e+5, error)
+    #error = max(-10e+5, error)
     return error
 
 
-class SedovDataset(torch.utils.data.Dataset):
+class HeatDistDataset(torch.utils.data.Dataset):
     def __init__(self, data_dir, error_data_file=None):
         self.data = []
         self.targets = []
 
-        # Read corrupted data
-        #for filename in glob.iglob(data_dir+"error/data_11_bit0_20_iter20.npy"):
-        for filename in glob.iglob(error_data_file):
-            d = np.load(filename)
-            print "read error data:", filename, d.shape
-            '''
-            for i in range(len(d)):
-                x = random.randint(20, 40)
-                y = random.randint(20, 40)
-                d[i, 0, x, y] = get_flip_error(d[i, 0, x, y])
-            '''
-            self.data.append( d )
-            self.targets.append(np.ones((d.shape[0], 1)))
-        error_len = self.data[0].shape[0]
-
         # Read clean data
-        for filename in glob.iglob(data_dir+"clean/data_11.npy"):
-            d = np.load(filename)[0:error_len]
-            #d = np.load(filename)
+        for filename in glob.iglob(data_dir+"/clean.npy"):
+            #d = np.load(filename)[0:error_len]
+            d = np.load(filename)
+            d = np.expand_dims(d, axis=1)   # add a channel dimension
             print "read clean data:", filename, d.shape
             self.data.append( d )
             self.targets.append(np.zeros((d.shape[0], 1)))
+
+        # Read corrupted data
+        #for filename in glob.iglob(data_dir+"error/data_11_bit0_20_iter20.npy"):
+        #for filename in glob.iglob(error_data_file):
+        for filename in glob.iglob(data_dir+"/clean.npy"):
+            d = np.load(filename)
+            d = np.expand_dims(d, axis=1)   # add a channel dimension
+            print "read error data:", filename, d.shape
+            for i in range(len(d)):
+                x = random.randint(20, 40)
+                y = random.randint(20, 40)
+                d[i, 0,  x, y] = get_flip_error(d[i, 0, x, y])
+            self.data.append( d )
+            self.targets.append(np.ones((d.shape[0], 1)))
+        #error_len = self.data[0].shape[0]
 
         self.data = np.vstack(self.data)
         self.targets = np.vstack(self.targets)
@@ -67,7 +68,7 @@ class CNN(nn.Module):
     def __init__(self):
         super(CNN, self).__init__()
         self.conv = nn.Sequential(
-            nn.Conv2d(3, 64, kernel_size=(6, 6), stride=(1, 1), padding=(2, 2)),
+            nn.Conv2d(1, 64, kernel_size=(6, 6), stride=(1, 1), padding=(2, 2)),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=(3, 3), stride=(2, 2), dilation=(1, 1), ceil_mode=False),
             nn.Conv2d(64, 192, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2)),
@@ -175,16 +176,18 @@ if __name__ == "__main__":
 
     print model
 
-    #trainset = SedovDataset('/home/chenw/sources/train/')
-    #train_loader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE, shuffle=True)
-    #testset = SedovDataset('/home/chenw/sources/train/')
+    trainset = HeatDistDataset('/home/wangchen/Sources/aletheia/detector/heat_distribution_classification/data')
+    train_loader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE, shuffle=True)
+    #testset = HeatDistDataset('/home/chenw/sources/train/')
     #test_loader = torch.utils.data.DataLoader(testset, batch_size=128, shuffle=False)
 
-    #training(model, train_loader)
-    #torch.save(model, model_file)
-    #evaluating(model, train_loader)
+    training(model, train_loader)
+    torch.save(model, model_file)
+    evaluating(model, train_loader)
 
+    '''
     for error_data_file in glob.iglob("/home/chenw/sources/test/error3/data_11_0to20*.npy"):
-        testset = SedovDataset('/home/chenw/sources/test/', error_data_file)
+        testset = HeatDistDataset('/home/chenw/sources/test/', error_data_file)
         test_loader = torch.utils.data.DataLoader(testset, batch_size=64, shuffle=False, num_workers=8)
         evaluating(model, test_loader)
+    '''
