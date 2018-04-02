@@ -14,7 +14,7 @@ WINDOW_ROWS = 60
 WINDOW_COLS = 60
 WINDOW_OVERLAP = 20
 
-SAVE_WINDOWS = True
+SAVE_WINDOWS = False
 SAVE_INTERVAL = 1
 
 HEATING_DEVICE_SIZE = 20     # the length of the heating source
@@ -26,6 +26,7 @@ HEATING_DEVICE_SIZE = 20     # the length of the heating source
 Gr = np.eye(HEATING_DEVICE_SIZE)
 for iGr in range(HEATING_DEVICE_SIZE):
     Gr[iGr,-iGr-1] = 10
+    Gr[iGr, iGr] = 10
 
 # Insert heating device in the center
 # Function to set M values corresponding to non-zero Gr values
@@ -106,14 +107,14 @@ def heat_distribution(interval = 1, error_iter=None, multiple_error=True):
             for y in range(1, COLUMNS-1):
                 frame[x,y] = (last_frame[x-1,y] + last_frame[x+1,y] +
                                 last_frame[x,y-1] + last_frame[x,y+1])/4.0
+        # Re-assert heaters
+        frame = assert_heaters(frame, Gr)
+
         # Dump to file
         if i % interval == 0:
             filename = str(i)+".npy"
             print("save to file: %s" %(filename))
             dump_data_file(frame, filename, SAVE_WINDOWS)
-
-        # Re-assert heaters
-        frame = assert_heaters(frame, Gr)
 
 if __name__ == "__main__":
     if len(sys.argv) == 2:
