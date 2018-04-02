@@ -14,7 +14,7 @@ CONV_INPUT_SHAPE = (len(variables), 60, 60)
 
 def get_flip_error(val):
     while True:
-        pos = random.randint(0, 20)
+        pos = random.randint(1, 20)
         error =  bit_flip(val, pos)
         if not math.isnan(error) and not math.isinf(error):
             break
@@ -32,22 +32,22 @@ class HeatDistDataset(torch.utils.data.Dataset):
         for filename in glob.iglob(data_dir+"/clean.npy"):
             #d = np.load(filename)[0:error_len]
             d = np.load(filename)
-            d = np.expand_dims(d, axis=1)   # add a channel dimension
+            d = np.expand_dims(d, axis=1)
             print "read clean data:", filename, d.shape
             self.data.append( d )
             self.targets.append(np.zeros((d.shape[0], 1)))
 
         # Read corrupted data
-        #for filename in glob.iglob(data_dir+"error/data_11_bit0_20_iter20.npy"):
+        #for filename in glob.iglob(data_dir+"clean/data_11.npy"):
         #for filename in glob.iglob(error_data_file):
         for filename in glob.iglob(data_dir+"/clean.npy"):
             d = np.load(filename)
-            d = np.expand_dims(d, axis=1)   # add a channel dimension
+            d = np.expand_dims(d, axis=1)
             print "read error data:", filename, d.shape
             for i in range(len(d)):
                 x = random.randint(20, 40)
                 y = random.randint(20, 40)
-                d[i, 0,  x, y] = get_flip_error(d[i, 0, x, y])
+                d[i, 0, x, y] = get_flip_error(d[i, 0, x, y])
             self.data.append( d )
             self.targets.append(np.ones((d.shape[0], 1)))
         #error_len = self.data[0].shape[0]
@@ -68,30 +68,78 @@ class CNN(nn.Module):
     def __init__(self):
         super(CNN, self).__init__()
         self.conv = nn.Sequential(
-            nn.Conv2d(1, 64, kernel_size=(6, 6), stride=(1, 1), padding=(2, 2)),
+            nn.Conv2d(len(variables), 46, 3, stride=1),
+            nn.BatchNorm2d(46),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=(3, 3), stride=(2, 2), dilation=(1, 1), ceil_mode=False),
-            nn.Conv2d(64, 192, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2)),
+            nn.Dropout(p = 0.2),
+            nn.MaxPool2d(3, stride=2),
+
+            nn.Conv2d(46, 64, 3, stride=1),
+            nn.BatchNorm2d(64),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=(3, 3), stride=(2, 2), dilation=(1, 1), ceil_mode=False),
-            nn.Conv2d(192, 384, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+            nn.Dropout(p = 0.2),
+            nn.MaxPool2d(3, stride=1),
+
+            nn.Conv2d(64, 64, 3, stride=1),
+            nn.BatchNorm2d(64),
             nn.ReLU(),
-            nn.Conv2d(384, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+            nn.Dropout(p = 0.2),
+
+            nn.Conv2d(64, 32, 3, stride=1),
+            nn.BatchNorm2d(32),
             nn.ReLU(),
-            nn.Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
-            nn.ReLU(),
-            nn.MaxPool2d(kernel_size=(3, 3), stride=(2, 2), dilation=(1, 1), ceil_mode=False),
+            nn.Dropout(p = 0.2),
         )
+        '''
+        self.conv = nn.Sequential(
+            nn.Conv2d(3, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+            nn.ReLU(),
+            nn.Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=(2, 2), stride=(2, 2), dilation=(1, 1)),
+            nn.Conv2d (64, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+            nn.ReLU(),
+            nn.Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=(2, 2), stride=(2, 2), dilation=(1, 1)),
+            nn.Conv2d (128, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+            nn.ReLU(),
+            nn.Conv2d (256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+            nn.ReLU(),
+            nn.Conv2d (256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+            nn.ReLU(),
+            nn.Conv2d (256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=(2, 2), stride=(2, 2), dilation=(1, 1)),
+            nn.Conv2d (256, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+            nn.ReLU(),
+            nn.Conv2d (512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+            nn.ReLU(),
+            nn.Conv2d (512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=(2, 2), stride=(2, 2), dilation=(1, 1)),
+            nn.Conv2d (512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+            nn.ReLU(),
+            nn.Conv2d (512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+            nn.ReLU(),
+            nn.Conv2d (512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+            nn.ReLU(),
+            nn.Conv2d (512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=(2, 2), stride=(2, 2), dilation=(1, 1)),
+        )
+        '''
         conv_output_size = self.get_conv_output_size()
         print "conv output size: ", conv_output_size
         self.fc = nn.Sequential(
-            nn.Dropout(p=0.5),
-            nn.Linear(in_features=9216, out_features=1, bias=True),
+            nn.Linear(conv_output_size, 1),
             #nn.ReLU(),
-            #nn.Dropout(p=0.5),
-            #nn.Linear(in_features=4096, out_features=4096, bias=True),
+            #nn.Dropout(p = 0.25),
+            #nn.Linear(6400, 1024),
             #nn.ReLU(),
-            #nn.Linear(in_features=4096, out_features=1, bias=True),
+            #nn.Dropout(p = 0.25),
+            #nn.Linear(1024, 1),
+            #nn.ReLU(),
             nn.Sigmoid(),
         )
     def forward(self, x):
@@ -159,8 +207,8 @@ def evaluating(model, test_loader):
     print("acc: %s fp: %s fn: %s" %(acc, fp, fn))
 
 
-if __name__ == "__main__":
-    model_file = "./alex.model"
+def main():
+    model_file = "./mytorch2.model"
     model = None
     if os.path.isfile(model_file):
         print "load"
@@ -178,16 +226,18 @@ if __name__ == "__main__":
 
     trainset = HeatDistDataset('/home/chenw/sources/aletheia/detector/heat_distribution_classification/data')
     train_loader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE, shuffle=True, num_workers=8)
-    #testset = HeatDistDataset('/home/chenw/sources/train/')
-    #test_loader = torch.utils.data.DataLoader(testset, batch_size=128, shuffle=False, num_workers=8)
+    #testset = HeatDistDataset('/u/sciteam/wang23/sources/train/')
+    #test_loader = torch.utils.data.DataLoader(testset, batch_size=128, shuffle=False)
 
     training(model, train_loader)
     torch.save(model, model_file)
-    evaluating(model, train_loader)
+    evaluating(model, test_loader)
 
     '''
-    for error_data_file in glob.iglob("/home/chenw/sources/test/error3/data_11_0to20*.npy"):
+    for error_data_file in glob.iglob("/home/chenw/sources/test/error4/data_11_0to20*.npy"):
         testset = HeatDistDataset('/home/chenw/sources/test/', error_data_file)
         test_loader = torch.utils.data.DataLoader(testset, batch_size=64, shuffle=False, num_workers=8)
         evaluating(model, test_loader)
     '''
+
+main()
