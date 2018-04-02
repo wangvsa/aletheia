@@ -28,29 +28,30 @@ class HeatDistDataset(torch.utils.data.Dataset):
         self.data = []
         self.targets = []
 
-        # Read clean data
-        for filename in glob.iglob(data_dir+"/clean.npy"):
-            #d = np.load(filename)[0:error_len]
-            d = np.load(filename)
-            d = np.expand_dims(d, axis=1)   # add a channel dimension
-            print "read clean data:", filename, d.shape
-            self.data.append( d )
-            self.targets.append(np.zeros((d.shape[0], 1)))
-
         # Read corrupted data
-        #for filename in glob.iglob(data_dir+"error/data_11_bit0_20_iter20.npy"):
-        #for filename in glob.iglob(error_data_file):
-        for filename in glob.iglob(data_dir+"/clean.npy"):
+        #for filename in glob.iglob(data_dir+"/error.npy"):
+        for filename in glob.iglob(error_data_file):
             d = np.load(filename)
             d = np.expand_dims(d, axis=1)   # add a channel dimension
             print "read error data:", filename, d.shape
+            '''
             for i in range(len(d)):
                 x = random.randint(20, 40)
                 y = random.randint(20, 40)
                 d[i, 0,  x, y] = get_flip_error(d[i, 0, x, y])
+            '''
             self.data.append( d )
             self.targets.append(np.ones((d.shape[0], 1)))
-        #error_len = self.data[0].shape[0]
+        error_len = self.data[0].shape[0]
+
+        # Read clean data
+        for filename in glob.iglob(data_dir+"/clean.npy"):
+            d = np.load(filename)[0:error_len]
+            #d = np.load(filename)
+            d = np.expand_dims(d, axis=1)   # add a channel dimension
+            print "read clean data:", filename, d.shape
+            self.data.append( d )
+            self.targets.append(np.zeros((d.shape[0], 1)))
 
         self.data = np.vstack(self.data)
         self.targets = np.vstack(self.targets)
@@ -176,18 +177,16 @@ if __name__ == "__main__":
 
     print model
 
-    trainset = HeatDistDataset('/home/chenw/sources/aletheia/detector/heat_distribution_classification/data')
-    train_loader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE, shuffle=True, num_workers=8)
-    testset = HeatDistDataset('/home/chenw/sources/aletheia/detector/heat_distribution_classification/data')
-    test_loader = torch.utils.data.DataLoader(testset, batch_size=128, shuffle=False, num_workers=8)
+    #trainset = HeatDistDataset('/home/chenw/sources/aletheia/detector/heat_distribution_classification/data')
+    #train_loader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE, shuffle=True, num_workers=8)
+    #testset = HeatDistDataset('/home/chenw/sources/aletheia/detector/heat_distribution_classification/data')
+    #test_loader = torch.utils.data.DataLoader(testset, batch_size=128, shuffle=False, num_workers=8)
 
-    training(model, train_loader)
-    torch.save(model, model_file)
-    evaluating(model, test_loader)
+    #training(model, train_loader)
+    #torch.save(model, model_file)
+    #evaluating(model, test_loader)
 
-    '''
-    for error_data_file in glob.iglob("/home/chenw/sources/test/error3/data_11_0to20*.npy"):
-        testset = HeatDistDataset('/home/chenw/sources/test/', error_data_file)
+    for error_data_file in glob.iglob("/home/chenw/sources/aletheia/detector/heat_distribution_classification/data/error/*.npy"):
+        testset = HeatDistDataset('/home/chenw/sources/aletheia/detector/heat_distribution_classification/data', error_data_file)
         test_loader = torch.utils.data.DataLoader(testset, batch_size=64, shuffle=False, num_workers=8)
         evaluating(model, test_loader)
-    '''

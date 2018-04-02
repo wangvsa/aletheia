@@ -114,7 +114,7 @@ def heat_distribution(interval = 1, error_iter=None, multiple_error=True):
         # Dump to file
         if error_iter is None or i >= error_iter:
             if i % interval == 0:
-                filename = str(error_iter)+"_"+str(i)+".npy"
+                filename = str(error_iter)+"_"+str(i-error_iter)+".npy"
                 print("save to file: %s" %(filename))
                 dump_data_file(frame, filename, SAVE_WINDOWS)
 
