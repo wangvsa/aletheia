@@ -12,8 +12,11 @@ def hdf5_to_numpy(filename):
     data = f[list(f.keys())[0]][:]
     return data
 
-def show_heatmap(filename):
-    data = hdf5_to_numpy(filename)
+def show_heatmap(filename, npy=True):
+    if npy: # file in numpy format
+        data = np.load(filename)
+    else:   # file in hdfs format
+        data = hdf5_to_numpy(filename)
     plt.imshow(data, cmap='hot', interpolation='nearest')
     plt.show()
 
@@ -47,5 +50,5 @@ if __name__ == "__main__":
     if len(sys.argv) != 2 :
         sys.exit("Usage: python plot dataset_directory")
     path = sys.argv[1]
-    #show_heatmap(path)
-    show_heatmap_animation(path, "test.mp4")
+    show_heatmap(path)
+    #show_heatmap_animation(path, "test.mp4")
