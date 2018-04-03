@@ -107,7 +107,7 @@ class CNN(nn.Module):
         return output_size
 
 def training(model, train_loader):
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
     #optimizer = torch.optim.SGD(model.parameters(), lr = 1e-6, momentum=0.5)
     #optimizer = torch.optim.RMSprop(model.parameters(), lr=0.0001)
     loss_func = nn.BCELoss()
@@ -184,6 +184,7 @@ if __name__ == "__main__":
     clean_data_file = "/home/chenw/sources/aletheia/detector/heat_distribution_classification/data/clean.npy"
 
     if args.train_file:
+        print("Training...")
         trainset = HeatDistDataset(clean_data_file, args.train_file)
         train_loader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE, shuffle=True, num_workers=8)
         testset = HeatDistDataset(clean_data_file, args.train_file)
@@ -192,10 +193,12 @@ if __name__ == "__main__":
         torch.save(model, model_file)
         evaluating(model, test_loader)
     elif args.evaluating_file:
+        print("Evaluating with a signle file...")
         testset = HeatDistDataset(clean_data_file, args.evaluating_file)
         test_loader = torch.utils.data.DataLoader(testset, batch_size=128, shuffle=False, num_workers=8)
         evaluating(model, test_loader)
     elif args.evaluating_path:
+        print("Evaluating with multiple files...")
         for error_data_file in glob.iglob(args.evaluating_path+"/*.npy"):
             testset = HeatDistDataset(clean_data_file, error_data_file)
             test_loader = torch.utils.data.DataLoader(testset, batch_size=128, shuffle=False, num_workers=8)
