@@ -145,11 +145,13 @@ def heat_distribution_error(error_iter, interval=1, multiple_error=True):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-t", "--iteration", type=int, help="total iterations to run")
+    parser.add_argument("-i", "--interval", type=int, help="intervals to dump data")
     parser.add_argument("-e", "--error_iter", type=int, help="Insert error at given iteration")
     args = parser.parse_args()
     print args
 
     if args.iteration: T = args.iteration
+    if args.interval: SAVE_INTERVAL = args.interval
     if args.error_iter is not None:
         print("error run")
         heat_distribution_error(error_iter=args.error_iter, interval=SAVE_INTERVAL)
