@@ -15,7 +15,7 @@ WINDOW_ROWS = 60
 WINDOW_COLS = 60
 WINDOW_OVERLAP = 20
 
-SAVE_WINDOWS = False
+SAVE_WINDOWS = True
 SAVE_INTERVAL = 1
 
 HEATING_DEVICE_SIZE = 20     # the length of the heating source
