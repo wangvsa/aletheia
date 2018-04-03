@@ -6,6 +6,7 @@ import glob
 import os
 import math
 import random
+import argparse
 from bits import bit_flip
 
 BATCH_SIZE = 64
@@ -24,34 +25,31 @@ def get_flip_error(val):
 
 
 class HeatDistDataset(torch.utils.data.Dataset):
-    def __init__(self, data_dir, error_data_file=None):
+    def __init__(self, clean_data_file, error_data_file=None):
         self.data = []
         self.targets = []
 
+        # Read clean data
+        clean_data = np.load(clean_data_file)
+        clean_data = np.expand_dims(clean_data, axis=1)   # add a channel dimension
+        print "read clean data:", clean_data_file, clean_data.shape
+
         # Read corrupted data
-        #for filename in glob.iglob(data_dir+"/error.npy"):
-        for filename in glob.iglob(error_data_file):
-            d = np.load(filename)
-            d = np.expand_dims(d, axis=1)   # add a channel dimension
-            print "read error data:", filename, d.shape
-            '''
-            for i in range(len(d)):
+        if error_data_file is not None:
+            error_data = np.load(error_data_file)
+            error_data = np.expand_dims(error_data, axis=1)   # add a channel dimension
+            print "read error data:", error_data_file, error_data.shape
+        else:
+            error_data = np.copy(clean_data)         # create 0 iteration error data
+            for i in range(len(error_data)):
                 x = random.randint(20, 40)
                 y = random.randint(20, 40)
-                d[i, 0,  x, y] = get_flip_error(d[i, 0, x, y])
-            '''
-            self.data.append( d )
-            self.targets.append(np.ones((d.shape[0], 1)))
-        error_len = self.data[0].shape[0]
+                error_data[i, 0,  x, y] = get_flip_error(error_data[i, 0, x, y])
 
-        # Read clean data
-        for filename in glob.iglob(data_dir+"/clean.npy"):
-            d = np.load(filename)[0:error_len]
-            #d = np.load(filename)
-            d = np.expand_dims(d, axis=1)   # add a channel dimension
-            print "read clean data:", filename, d.shape
-            self.data.append( d )
-            self.targets.append(np.zeros((d.shape[0], 1)))
+        self.data.append( error_data )
+        self.targets.append(np.ones((error_data.shape[0], 1)))
+        self.data.append( clean_data[0:error_data.shape[0]] )
+        self.targets.append(np.zeros((error_data.shape[0], 1)))
 
         self.data = np.vstack(self.data)
         self.targets = np.vstack(self.targets)
@@ -115,7 +113,7 @@ def training(model, train_loader):
     loss_func = nn.BCELoss()
 
     running_loss = 0
-    for epoch in range(5):
+    for epoch in range(2):
         for i, data in enumerate(train_loader):
             inputs, labels = data
             if torch.cuda.is_available():
@@ -164,7 +162,7 @@ if __name__ == "__main__":
     model_file = "./alex.model"
     model = None
     if os.path.isfile(model_file):
-        print "load"
+        print "Load existing model"
         model = torch.load(model_file)
     else:
         model = CNN().double()
@@ -177,16 +175,29 @@ if __name__ == "__main__":
 
     print model
 
-    #trainset = HeatDistDataset('/home/chenw/sources/aletheia/detector/heat_distribution_classification/data')
-    #train_loader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE, shuffle=True, num_workers=8)
-    #testset = HeatDistDataset('/home/chenw/sources/aletheia/detector/heat_distribution_classification/data')
-    #test_loader = torch.utils.data.DataLoader(testset, batch_size=128, shuffle=False, num_workers=8)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-t", "--train", help="Train the model", action="store_true")
+    parser.add_argument("-s", "--evaluating_file", help="Evaluating the model with single file")
+    parser.add_argument("-m", "--evaluating_path", help="Evaluating the model with multiple files")
+    args = parser.parse_args()
 
-    #training(model, train_loader)
-    #torch.save(model, model_file)
-    #evaluating(model, test_loader)
+    clean_data_file = "/home/chenw/sources/aletheia/detector/heat_distribution_classification/data/clean.npy"
 
-    for error_data_file in glob.iglob("/home/chenw/sources/aletheia/detector/heat_distribution_classification/data/error/*.npy"):
-        testset = HeatDistDataset('/home/chenw/sources/aletheia/detector/heat_distribution_classification/data', error_data_file)
-        test_loader = torch.utils.data.DataLoader(testset, batch_size=64, shuffle=False, num_workers=8)
+    if args.train:
+        trainset = HeatDistDataset(clean_data_file, None)
+        train_loader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE, shuffle=True, num_workers=8)
+        testset = HeatDistDataset(clean_data_file, None)
+        test_loader = torch.utils.data.DataLoader(testset, batch_size=128, shuffle=False, num_workers=8)
+        training(model, train_loader)
+        torch.save(model, model_file)
         evaluating(model, test_loader)
+    elif args.evaluating_file:
+        testset = HeatDistDataset(clean_data_file, args.evaluating_file)
+        test_loader = torch.utils.data.DataLoader(testset, batch_size=128, shuffle=False, num_workers=8)
+        evaluating(model, test_loader)
+    elif args.evaluating_path:
+        for error_data_file in glob.iglob(args.evaluating_path+"/*.npy"):
+            testset = HeatDistDataset(clean_data_file, error_data_file)
+            test_loader = torch.utils.data.DataLoader(testset, batch_size=128, shuffle=False, num_workers=8)
+            evaluating(model, test_loader)
+
