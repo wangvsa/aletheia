@@ -21,7 +21,7 @@ def combine_one_iteration(data_dir):
     for i in range(0, 100, 5):
         regex = data_dir + "/*_"  + str(i) + ".npy" # e.g. *_10.npy
         print(regex)
-        #combine_npys(regex, "after_"+str(i))
+        combine_npys(regex, "after_"+str(i))
 
 
 # Combine all npys

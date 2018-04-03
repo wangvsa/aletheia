@@ -77,8 +77,8 @@ def insert_error(frame, multiple=True):
         y = random.randint(0, COLUMNS-1)
         frame[x, y] = get_flip_error(frame[x,y])
     else:
-        for start_y in range(20, 460, 40):
-            for start_x in range(20, 460, 40):
+        for start_x in range(20, 460, 40):
+            for start_y in range(20, 460, 40):
                 x = start_x + random.randint(0, 20)
                 y = start_y + random.randint(0, 20)
                 old = frame[x, y]
