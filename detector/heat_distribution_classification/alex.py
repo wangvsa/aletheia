@@ -176,17 +176,17 @@ if __name__ == "__main__":
     print model
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-t", "--train", help="Train the model", action="store_true")
+    parser.add_argument("-t", "--train_file", help="Train the model")
     parser.add_argument("-s", "--evaluating_file", help="Evaluating the model with single file")
     parser.add_argument("-m", "--evaluating_path", help="Evaluating the model with multiple files")
     args = parser.parse_args()
 
     clean_data_file = "/home/chenw/sources/aletheia/detector/heat_distribution_classification/data/clean.npy"
 
-    if args.train:
-        trainset = HeatDistDataset(clean_data_file, None)
+    if args.train_file:
+        trainset = HeatDistDataset(clean_data_file, args.train_file)
         train_loader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE, shuffle=True, num_workers=8)
-        testset = HeatDistDataset(clean_data_file, None)
+        testset = HeatDistDataset(clean_data_file, args.train_file)
         test_loader = torch.utils.data.DataLoader(testset, batch_size=128, shuffle=False, num_workers=8)
         training(model, train_loader)
         torch.save(model, model_file)
