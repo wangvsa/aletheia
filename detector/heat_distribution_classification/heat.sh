@@ -1,9 +1,7 @@
 #!/bin/sh
 
-#PBS -N HEAT_CNN2
-#PBS -l nodes=1:ppn=16
-#PBS -l walltime=03:59:00
-#PBS -j oe
-
-cd /home/wangchen/detector/heat_distribution_classification
-python classifier.py
+for error_iter in {0..199}; do
+    T=$( expr $error_iter + 5 )
+    echo $error_iter $T
+    python heat_distribution.py -e $error_iter -t $T
+done

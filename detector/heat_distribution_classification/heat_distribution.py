@@ -15,7 +15,7 @@ WINDOW_ROWS = 60
 WINDOW_COLS = 60
 WINDOW_OVERLAP = 20
 
-SAVE_WINDOWS = True
+SAVE_WINDOWS = False
 SAVE_INTERVAL = 1
 
 HEATING_DEVICE_SIZE = 20     # the length of the heating source
@@ -83,24 +83,17 @@ def insert_error(frame, multiple=True):
                 y = start_y + random.randint(0, 20)
                 old = frame[x, y]
                 frame[x, y] = get_flip_error(frame[x,y])
-                print("insert error at %s, old:%s new:%s" %((x,y), old, frame[x,y]))
+                #print("insert error at %s, old:%s new:%s" %((x,y), old, frame[x,y]))
     return frame
 
-# Heat distribution program
+# Heat distribution program, a clean run
 # interval: the interval to save data
-# error_iter: insert error at this iteration
-# multiple_error: whether to insert multiple errors
-def heat_distribution(interval = 1, error_iter=None, multiple_error=True):
+def heat_distribution_clean(interval = 1):
     frame = np.zeros((ROWS, COLUMNS))+2
     frame = assert_heaters(frame, Gr)
     for i in range(0, T):
 
         print("iter: %s" %(i))
-
-        # Insert error
-        if error_iter is not None and i == error_iter:
-            frame = insert_error(frame, multiple_error)
-            print("insert error at iter: %s" %(i))
 
         # Stencil computation
         last_frame = np.copy(frame)
@@ -112,11 +105,41 @@ def heat_distribution(interval = 1, error_iter=None, multiple_error=True):
         frame = assert_heaters(frame, Gr)
 
         # Dump to file
-        if error_iter is None or i >= error_iter:
-            if i % interval == 0:
-                filename = str(error_iter)+"_"+str(i-error_iter)+".npy"
-                print("save to file: %s" %(filename))
-                dump_data_file(frame, filename, SAVE_WINDOWS)
+        if i % interval == 0:
+            filename = str(i) + ".npy"
+            print("save to file: %s" %(filename))
+            dump_data_file(frame, filename, SAVE_WINDOWS)
+
+
+# Rean clean data and insert error at given iteration then continue to run
+# interval: the interval to save data
+# error_iter: insert error at this iteration
+# multiple_error: whether to insert multiple errors
+def heat_distribution_error(error_iter, interval=1, multiple_error=True):
+    frames = np.load("./data/clean_no_split.npy")
+
+    # Insert error
+    frame = np.copy(frames[error_iter])
+    frame = insert_error(frame, multiple_error)
+    print("insert error at iter: %s" %(error_iter))
+
+    for i in range(error_iter, T):
+
+        # Dump to file
+        if i % interval == 0:
+            filename = str(error_iter)+"_"+str(i-error_iter)+".npy"
+            print("save to file: %s" %(filename))
+            dump_data_file(frame, filename, SAVE_WINDOWS)
+
+        # Stencil computation
+        last_frame = np.copy(frame)
+        for x in range(1, ROWS-1):
+            for y in range(1, COLUMNS-1):
+                frame[x,y] = (last_frame[x-1,y] + last_frame[x+1,y] +
+                                last_frame[x,y-1] + last_frame[x,y+1])/4.0
+
+        # Re-assert heaters
+        frame = assert_heaters(frame, Gr)
 
 
 if __name__ == "__main__":
@@ -127,8 +150,10 @@ if __name__ == "__main__":
     print args
 
     if args.iteration: T = args.iteration
-    if args.error_iter:
-        heat_distribution(interval=SAVE_INTERVAL, error_iter=args.error_iter)
+    if args.error_iter is not None:
+        print("error run")
+        heat_distribution_error(error_iter=args.error_iter, interval=SAVE_INTERVAL)
     else:
-        heat_distribution(interval=SAVE_INTERVAL)
+        print("clean run")
+        heat_distribution_clean(interval=SAVE_INTERVAL)
 

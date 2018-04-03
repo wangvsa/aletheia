@@ -8,11 +8,15 @@ def combine_npys(path, regex=".npy"):
     for filename in glob.iglob(path+"/*"+regex):
         data = np.load(filename)
         print(filename, data.shape)
-        dataset.append(np.load(filename))
+        if data.ndim == 2:
+            data = np.expand_dims(data, axis=0) # make (480, 480) -> (1, 480, 480)
+        dataset.append(data)
     dataset = np.vstack(dataset)
     print("save combined data: ", dataset.shape)
     np.save("after"+regex, dataset)
 
+combine_npys(sys.argv[1])
+'''
 combine_npys(sys.argv[1], "_0.npy")
 combine_npys(sys.argv[1], "_1.npy")
 combine_npys(sys.argv[1], "_2.npy")
@@ -33,3 +37,4 @@ combine_npys(sys.argv[1], "_16.npy")
 combine_npys(sys.argv[1], "_17.npy")
 combine_npys(sys.argv[1], "_18.npy")
 combine_npys(sys.argv[1], "_19.npy")
+'''
