@@ -133,7 +133,7 @@ def heat_distribution_error(error_iter, interval=1, multiple_error=True):
 
         # Dump to file
         if i % interval == 0:
-            filename = str(error_iter)+"_"+str(i-error_iter)+".npy"
+            filename = str(error_iter)+"_"+str(error_win_id)+"_"+str(i-error_iter)+".npy"
             print("save to file: %s" %(filename))
             if multiple_error:
                 dump_data_file(frame, filename, SAVE_WINDOWS)
