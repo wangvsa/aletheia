@@ -7,9 +7,9 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
 # Read from a hdf5 file to a numpy array
-def hdf5_to_numpy(filename):
+def hdf5_to_numpy(filename, var_name="dens"):
     f = h5py.File(filename, 'r')
-    data = f[list(f.keys())[0]][:]
+    data = f[var_name][0, 0]
     return data
 
 def show_heatmap(filename, npy=True):
@@ -26,8 +26,8 @@ def show_heatmap_animation(dataset_dir, save_path=None):
     # Set margins, remove extra space
     fig.subplots_adjust(left=0, right=1, top=0.95, bottom=0.05)
     ims = []
-    for filename in glob.iglob(dataset_dir+"/*.h5"):
-        data = hdf5_to_numpy(filename)
+    for filename in glob.iglob(dataset_dir+"/*.npy"):
+        data = np.load(filename)
         im = plt.imshow(data, animated=True)
         ims.append([im])
 
@@ -50,5 +50,5 @@ if __name__ == "__main__":
     if len(sys.argv) != 2 :
         sys.exit("Usage: python plot dataset_directory")
     path = sys.argv[1]
-    show_heatmap(path)
-    #show_heatmap_animation(path, "test.mp4")
+    #show_heatmap(path)
+    show_heatmap_animation(path, "test.mp4")
