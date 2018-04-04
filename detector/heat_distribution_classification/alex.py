@@ -159,7 +159,7 @@ def evaluating(model, test_loader):
 
 
 if __name__ == "__main__":
-    model_file = "./alex.model"
+    model_file = "./alex_train_0.model"
     model = None
     if os.path.isfile(model_file):
         print "Load existing model"

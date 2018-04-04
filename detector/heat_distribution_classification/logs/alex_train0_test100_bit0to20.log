@@ -1,0 +1,126 @@
+Load existing model
+DataParallel(
+    (module): CNN(
+        (conv): Sequential(
+            (0): Conv2d(1, 64, kernel_size=(6, 6), stride=(1, 1), padding=(2, 2))
+            (1): ReLU()
+            (2): MaxPool2d(kernel_size=(3, 3), stride=(2, 2), dilation=(1, 1), ceil_mode=False)
+            (3): Conv2d(64, 192, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2))
+            (4): ReLU()
+            (5): MaxPool2d(kernel_size=(3, 3), stride=(2, 2), dilation=(1, 1), ceil_mode=False)
+            (6): Conv2d(192, 384, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (7): ReLU()
+            (8): Conv2d(384, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (9): ReLU()
+            (10): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (11): ReLU()
+            (12): MaxPool2d(kernel_size=(3, 3), stride=(2, 2), dilation=(1, 1), ceil_mode=False)
+        )
+        (fc): Sequential(
+            (0): Dropout(p=0.5)
+            (1): Linear(in_features=9216, out_features=1, bias=True)
+            (2): Sigmoid()
+        )
+    )
+)
+Evaluating with multiple files...
+read clean data: /home/chenw/sources/aletheia/detector/heat_distribution_classification/data/clean.npy (24200, 1, 60, 60)
+read error data: ./data/error/after_0.npy (200, 1, 60, 60)
+data size: (400L, 1L, 60L, 60L) , targets size:  (400L, 1L)
+0 116.0 0.0 12.0
+acc: 0.96 fp: 0.0 fn: 0.04
+read clean data: /home/chenw/sources/aletheia/detector/heat_distribution_classification/data/clean.npy (24200, 1, 60, 60)
+read error data: ./data/error/after_10.npy (200, 1, 60, 60)
+data size: (400L, 1L, 60L, 60L) , targets size:  (400L, 1L)
+0 99.0 0.0 29.0
+acc: 0.8775 fp: 0.005 fn: 0.1175
+read clean data: /home/chenw/sources/aletheia/detector/heat_distribution_classification/data/clean.npy (24200, 1, 60, 60)
+read error data: ./data/error/after_15.npy (200, 1, 60, 60)
+data size: (400L, 1L, 60L, 60L) , targets size:  (400L, 1L)
+0 97.0 0.0 31.0
+acc: 0.87 fp: 0.005 fn: 0.125
+read clean data: /home/chenw/sources/aletheia/detector/heat_distribution_classification/data/clean.npy (24200, 1, 60, 60)
+read error data: ./data/error/after_20.npy (200, 1, 60, 60)
+data size: (400L, 1L, 60L, 60L) , targets size:  (400L, 1L)
+0 96.0 0.0 32.0
+acc: 0.8725 fp: 0.0 fn: 0.1275
+read clean data: /home/chenw/sources/aletheia/detector/heat_distribution_classification/data/clean.npy (24200, 1, 60, 60)
+read error data: ./data/error/after_25.npy (200, 1, 60, 60)
+data size: (400L, 1L, 60L, 60L) , targets size:  (400L, 1L)
+0 94.0 0.0 34.0
+acc: 0.8625 fp: 0.0025 fn: 0.135
+read clean data: /home/chenw/sources/aletheia/detector/heat_distribution_classification/data/clean.npy (24200, 1, 60, 60)
+read error data: ./data/error/after_30.npy (200, 1, 60, 60)
+data size: (400L, 1L, 60L, 60L) , targets size:  (400L, 1L)
+0 89.0 0.0 39.0
+acc: 0.8475 fp: 0.0 fn: 0.1525
+read clean data: /home/chenw/sources/aletheia/detector/heat_distribution_classification/data/clean.npy (24200, 1, 60, 60)
+read error data: ./data/error/after_35.npy (200, 1, 60, 60)
+data size: (400L, 1L, 60L, 60L) , targets size:  (400L, 1L)
+0 89.0 0.0 39.0
+acc: 0.8425 fp: 0.0025 fn: 0.155
+read clean data: /home/chenw/sources/aletheia/detector/heat_distribution_classification/data/clean.npy (24200, 1, 60, 60)
+read error data: ./data/error/after_40.npy (200, 1, 60, 60)
+data size: (400L, 1L, 60L, 60L) , targets size:  (400L, 1L)
+0 88.0 0.0 40.0
+acc: 0.84 fp: 0.0 fn: 0.16
+read clean data: /home/chenw/sources/aletheia/detector/heat_distribution_classification/data/clean.npy (24200, 1, 60, 60)
+read error data: ./data/error/after_45.npy (200, 1, 60, 60)
+data size: (400L, 1L, 60L, 60L) , targets size:  (400L, 1L)
+0 86.0 0.0 42.0
+acc: 0.8325 fp: 0.0 fn: 0.1675
+read clean data: /home/chenw/sources/aletheia/detector/heat_distribution_classification/data/clean.npy (24200, 1, 60, 60)
+read error data: ./data/error/after_50.npy (200, 1, 60, 60)
+data size: (400L, 1L, 60L, 60L) , targets size:  (400L, 1L)
+0 84.0 0.0 44.0
+acc: 0.8275 fp: 0.0 fn: 0.1725
+read clean data: /home/chenw/sources/aletheia/detector/heat_distribution_classification/data/clean.npy (24200, 1, 60, 60)
+read error data: ./data/error/after_55.npy (200, 1, 60, 60)
+data size: (400L, 1L, 60L, 60L) , targets size:  (400L, 1L)
+0 82.0 0.0 46.0
+acc: 0.8175 fp: 0.0 fn: 0.1825
+read clean data: /home/chenw/sources/aletheia/detector/heat_distribution_classification/data/clean.npy (24200, 1, 60, 60)
+read error data: ./data/error/after_5.npy (200, 1, 60, 60)
+data size: (400L, 1L, 60L, 60L) , targets size:  (400L, 1L)
+0 102.0 0.0 26.0
+acc: 0.895 fp: 0.0025 fn: 0.1025
+read clean data: /home/chenw/sources/aletheia/detector/heat_distribution_classification/data/clean.npy (24200, 1, 60, 60)
+read error data: ./data/error/after_60.npy (200, 1, 60, 60)
+data size: (400L, 1L, 60L, 60L) , targets size:  (400L, 1L)
+0 75.0 0.0 53.0
+acc: 0.7925 fp: 0.0025 fn: 0.205
+read clean data: /home/chenw/sources/aletheia/detector/heat_distribution_classification/data/clean.npy (24200, 1, 60, 60)
+read error data: ./data/error/after_65.npy (200, 1, 60, 60)
+data size: (400L, 1L, 60L, 60L) , targets size:  (400L, 1L)
+0 74.0 0.0 54.0
+acc: 0.79 fp: 0.0 fn: 0.21
+read clean data: /home/chenw/sources/aletheia/detector/heat_distribution_classification/data/clean.npy (24200, 1, 60, 60)
+read error data: ./data/error/after_70.npy (200, 1, 60, 60)
+data size: (400L, 1L, 60L, 60L) , targets size:  (400L, 1L)
+0 72.0 0.0 56.0
+acc: 0.79 fp: 0.0 fn: 0.21
+read clean data: /home/chenw/sources/aletheia/detector/heat_distribution_classification/data/clean.npy (24200, 1, 60, 60)
+read error data: ./data/error/after_75.npy (200, 1, 60, 60)
+data size: (400L, 1L, 60L, 60L) , targets size:  (400L, 1L)
+0 71.0 0.0 57.0
+acc: 0.7725 fp: 0.0025 fn: 0.225
+read clean data: /home/chenw/sources/aletheia/detector/heat_distribution_classification/data/clean.npy (24200, 1, 60, 60)
+read error data: ./data/error/after_80.npy (200, 1, 60, 60)
+data size: (400L, 1L, 60L, 60L) , targets size:  (400L, 1L)
+0 64.0 0.0 64.0
+acc: 0.76 fp: 0.0 fn: 0.24
+read clean data: /home/chenw/sources/aletheia/detector/heat_distribution_classification/data/clean.npy (24200, 1, 60, 60)
+read error data: ./data/error/after_85.npy (200, 1, 60, 60)
+data size: (400L, 1L, 60L, 60L) , targets size:  (400L, 1L)
+0 64.0 0.0 64.0
+acc: 0.7475 fp: 0.0025 fn: 0.25
+read clean data: /home/chenw/sources/aletheia/detector/heat_distribution_classification/data/clean.npy (24200, 1, 60, 60)
+read error data: ./data/error/after_90.npy (200, 1, 60, 60)
+data size: (400L, 1L, 60L, 60L) , targets size:  (400L, 1L)
+0 62.0 0.0 66.0
+acc: 0.7425 fp: 0.0025 fn: 0.255
+read clean data: /home/chenw/sources/aletheia/detector/heat_distribution_classification/data/clean.npy (24200, 1, 60, 60)
+read error data: ./data/error/after_95.npy (200, 1, 60, 60)
+data size: (400L, 1L, 60L, 60L) , targets size:  (400L, 1L)
+0 59.0 0.0 69.0
+acc: 0.735 fp: 0.0025 fn: 0.2625
