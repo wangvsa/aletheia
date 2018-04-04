@@ -50,13 +50,17 @@ def split_to_blocks(frame, rows, cols):
 
 # Split a frame to windows/blocks and save to a npy file
 # split: Wether split to windows/blocks
-def dump_data_file(frame, filename, split=True):
-    if split:
+def dump_data_file(frame, filename, split, error_win_id=None):
+    if error_win_id is not None:
         windows = split_to_windows(frame, WINDOW_ROWS, WINDOW_COLS, WINDOW_OVERLAP)
-        np.save(filename, windows)
-    else :
-        np.save(filename, frame)
-
+        np.save(filename, windows[error_win_id])
+    else:
+        if split:
+            windows = split_to_windows(frame, WINDOW_ROWS, WINDOW_COLS, WINDOW_OVERLAP)
+            np.save(filename, windows)
+        else:
+            np.save(filename, frame)
+    print("save to file: %s" %(filename))
 
 def get_flip_error(val):
     while True:
@@ -71,11 +75,14 @@ def get_flip_error(val):
 
 # Insert errors in a given frame
 # multiple: whether to insert multiple errors
-def insert_error(frame, multiple=True):
+def insert_error(frame, multiple):
     if not multiple:
-        x = random.randint(0, ROWS-1)
-        y = random.randint(0, COLUMNS-1)
+        win_x, win_y = random.randint(0,11-1), random.randint(0,11-1)
+        x = np.arange(20, 460, 40)[win_x] + random.randint(0,20)
+        y = np.arange(20, 460, 40)[win_y] + random.randint(0,20)
+        error_win_id = win_x * 11 + win_y
         frame[x, y] = get_flip_error(frame[x,y])
+        return frame, error_win_id
     else:
         for start_x in range(20, 460, 40):
             for start_y in range(20, 460, 40):
@@ -84,7 +91,7 @@ def insert_error(frame, multiple=True):
                 old = frame[x, y]
                 frame[x, y] = get_flip_error(frame[x,y])
                 #print("insert error at %s, old:%s new:%s" %((x,y), old, frame[x,y]))
-    return frame
+        return frame, -1
 
 # Heat distribution program, a clean run
 # interval: the interval to save data
@@ -107,7 +114,6 @@ def heat_distribution_clean(interval = 1):
         # Dump to file
         if i % interval == 0:
             filename = str(i) + ".npy"
-            print("save to file: %s" %(filename))
             dump_data_file(frame, filename, SAVE_WINDOWS)
 
 
@@ -120,7 +126,7 @@ def heat_distribution_error(error_iter, interval=1, multiple_error=True):
 
     # Insert error
     frame = np.copy(frames[error_iter])
-    frame = insert_error(frame, multiple_error)
+    frame, error_win_id = insert_error(frame, multiple_error)
     print("insert error at iter: %s" %(error_iter))
 
     for i in range(error_iter, T):
@@ -129,7 +135,10 @@ def heat_distribution_error(error_iter, interval=1, multiple_error=True):
         if i % interval == 0:
             filename = str(error_iter)+"_"+str(i-error_iter)+".npy"
             print("save to file: %s" %(filename))
-            dump_data_file(frame, filename, SAVE_WINDOWS)
+            if multiple_error:
+                dump_data_file(frame, filename, SAVE_WINDOWS)
+            else:
+                dump_data_file(frame, filename, SAVE_WINDOWS, error_win_id) # only save the error window
 
         # Stencil computation
         last_frame = np.copy(frame)
@@ -154,7 +163,7 @@ if __name__ == "__main__":
     if args.interval: SAVE_INTERVAL = args.interval
     if args.error_iter is not None:
         print("error run")
-        heat_distribution_error(error_iter=args.error_iter, interval=SAVE_INTERVAL)
+        heat_distribution_error(error_iter=args.error_iter, interval=SAVE_INTERVAL, multiple_error=False)
     else:
         print("clean run")
         heat_distribution_clean(interval=SAVE_INTERVAL)
