@@ -31,7 +31,10 @@ def show_heatmap_animation(filename, save_path=None):
 
     data = np.load(filename)
     for i in range(data.shape[0]):
-        im = plt.imshow(data[i, 0], animated=True)
+        if data.ndim == 4:
+            im = plt.imshow(data[i, 0], animated=True)
+        elif data.ndim == 3:
+            im = plt.imshow(data[i], animated=True)
         ims.append([im])
 
     ani = animation.ArtistAnimation(fig, ims, interval=100, blit=False, repeat_delay=1000)
