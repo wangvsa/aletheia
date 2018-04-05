@@ -101,11 +101,6 @@ ENV/
 # hdf5 files
 *.h5
 
-# video files
-*.mp4
-*.avi
-*.wmv
-
 # all data file
 data/
 
