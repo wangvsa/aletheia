@@ -59,8 +59,8 @@ def insert_errors(data_dir, restart_point):
 
     filenumber = ("0000"+str(restart_point))[-4:]
     basenm = "error_%s_" %(restart_point) + str(int(time.time()*1000))
-    clean_data_dir =  "_".join(data_dir.split("_")[0:2]) + "/" #e.g. data_11_0to20 -> data_11
-    clean_checkpoint_file = clean_data_dir + "sod_hdf5_chk_"+filenumber
+    clean_data_dir =  data_dir + "/clean/"
+    clean_checkpoint_file = clean_data_dir + "sedov_hdf5_chk_"+filenumber
     corrupted_checkpoint_file = data_dir + basenm + "hdf5_chk_" + filenumber
 
     # Copy a corrupted checkpoint file
@@ -70,14 +70,14 @@ def insert_errors(data_dir, restart_point):
 
     # Insert one into each of the windows of a 480x480 frame,
     # so we will have 11x11 windows (60, 60, overlap:20)
-    valid, all = 0, 0
     for start_y in range(20, 460, 40):
         for start_x in range(20, 460, 40):
             x = start_x + random.randint(0, 20)
             y = start_y + random.randint(0, 20)
             # Insert error
+            old = f['dens'][0,0,y,x]
             f['dens'][0, 0, y, x] = get_flip_error(f['dens'][0,0,y,x])
-
+            print("(%s,%s, old:%s, new:%s)" %(x,y,old,f['dens'][0,0,y,x]))
     f.close()
     return basenm
 
@@ -109,7 +109,8 @@ def insert_error(data_dir, restart_point):
 
 def restart(data_dir):
     for restart_point in range(50, 100, 10): # 0~200, step=20
-        basename = insert_error(data_dir, restart_point)
+        #basename = insert_error(data_dir, restart_point)
+        basename = insert_errors(data_dir, restart_point)
         new_par_file = modify_par_file(data_dir, basename, restart_point)
         print(new_par_file)
 
