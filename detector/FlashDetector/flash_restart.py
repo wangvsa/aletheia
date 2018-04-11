@@ -93,7 +93,7 @@ def insert_error(data_dir, restart_point):
     basenm = "error_%s_%s_%s_%s" %(restart_point, error_win_id, x, y)
 
     clean_data_dir =  data_dir + "/clean/"
-    clean_checkpoint_file = clean_data_dir + "sod_hdf5_chk_"+filenumber
+    clean_checkpoint_file = clean_data_dir + "sedov_hdf5_chk_"+filenumber
 
     corrupted_checkpoint_file = data_dir + basenm + "hdf5_chk_" + filenumber
 
