@@ -30,7 +30,7 @@ def get_error_data(data_dir, rows, cols, overlap):
     dataset = []
     for filename in glob.iglob(data_dir+"/error_*hdf5_plt_cnt_*"):
     #for filename in glob.iglob(data_dir+"/error_0_hdf5_plt_cnt_*"):
-        if 'forced' in filename or 'plt_cnt_0021' in filename:
+        if 'forced' in filename in filename:
             os.system('rm '+filename)
             continue
 
@@ -53,7 +53,7 @@ def get_error_data(data_dir, rows, cols, overlap):
     dataset = np.vstack(dataset)
     print "dataset shape:", dataset.shape
     output_file = data_dir.split('/')[-2]
-    np.save(output_file, dataset)
+    np.save("error_iter_5", dataset)
 
 
 # Read all hdf5 files in a given directory
@@ -87,6 +87,6 @@ def test_min_max(data_dir):
         data = np.load(filename)
         print filename, data.shape, ', min:', np.unravel_index(np.argmin(data), data.shape), 'max:',  np.unravel_index(np.argmax(data), data.shape)
 
-get_clean_data(sys.argv[1], 60, 60, 20)
-#get_error_data(sys.argv[1], 60, 60, 20)
+#get_clean_data(sys.argv[1], 60, 60, 20)
+get_error_data(sys.argv[1], 60, 60, 20)
 #test_min_max(sys.argv[1])
