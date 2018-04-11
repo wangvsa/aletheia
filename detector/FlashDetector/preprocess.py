@@ -60,7 +60,7 @@ def get_error_data(data_dir, rows, cols, overlap):
 # Each frame is splited into blocks with overlap
 def get_clean_data(data_dir, rows, cols, overlap):
     dataset = []
-    for filename in glob.iglob(data_dir+"/sod_hdf5_chk_*"):
+    for filename in glob.iglob(data_dir+"/sedov_hdf5_chk_*"):
         dens = hdf5_to_numpy(filename, 'dens')
         temp = hdf5_to_numpy(filename, 'temp')
         pres = hdf5_to_numpy(filename, 'pres')
@@ -87,6 +87,6 @@ def test_min_max(data_dir):
         data = np.load(filename)
         print filename, data.shape, ', min:', np.unravel_index(np.argmin(data), data.shape), 'max:',  np.unravel_index(np.argmax(data), data.shape)
 
-#get_clean_data(sys.argv[1], 60, 60, 20)
-get_error_data(sys.argv[1], 60, 60, 20)
+get_clean_data(sys.argv[1], 60, 60, 20)
+#get_error_data(sys.argv[1], 60, 60, 20)
 #test_min_max(sys.argv[1])
