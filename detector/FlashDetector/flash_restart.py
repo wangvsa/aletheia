@@ -60,7 +60,7 @@ def insert_errors(data_dir, restart_point):
     filenumber = ("0000"+str(restart_point))[-4:]
     basenm = "error_%s_" %(restart_point) + str(int(time.time()*1000))
     clean_data_dir =  data_dir + "/clean/"
-    clean_checkpoint_file = clean_data_dir + "blast2_hdf5_chk_"+filenumber
+    clean_checkpoint_file = clean_data_dir + "bw_1d_hdf5_chk_"+filenumber
     corrupted_checkpoint_file = data_dir + basenm + "hdf5_chk_" + filenumber
 
     # Copy a corrupted checkpoint file
@@ -93,7 +93,7 @@ def insert_error(data_dir, restart_point):
     basenm = "error_%s_%s_%s_%s" %(restart_point, error_win_id, x, y)
 
     clean_data_dir =  data_dir + "/clean/"
-    clean_checkpoint_file = clean_data_dir + "blast2_hdf5_chk_"+filenumber
+    clean_checkpoint_file = clean_data_dir + "bw_1d_hdf5_chk_"+filenumber
 
     corrupted_checkpoint_file = data_dir + basenm + "hdf5_chk_" + filenumber
 
