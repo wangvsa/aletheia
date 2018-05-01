@@ -13,41 +13,17 @@ BATCH_SIZE = 64
 variables = ['temp']
 CONV_INPUT_SHAPE = (len(variables), 60, 60)
 
-def get_flip_error(val):
-    while True:
-        pos = random.randint(0, 20)
-        error =  bit_flip(val, pos)
-        if not math.isnan(error) and not math.isinf(error):
-            break
-    error = min(10e+3, error)
-    error = max(-10e+3, error)
-    return error
 
-
-class HeatDistDataset(torch.utils.data.Dataset):
-    def __init__(self, clean_data_file, error_data_file=None):
+class FlashDataset(torch.utils.data.Dataset):
+    def __init__(self, clean_data, error_data):
         self.data = []
         self.targets = []
 
-        # Read clean data
-        clean_data = np.load(clean_data_file)
-        clean_data = np.expand_dims(clean_data, axis=1)   # add a channel dimension
-        print "read clean data:", clean_data_file, clean_data.shape
-
-        # Read corrupted data
-        if error_data_file is not None:
-            error_data = np.load(error_data_file)
-            error_data = np.expand_dims(error_data, axis=1)   # add a channel dimension
-            print "read error data:", error_data_file, error_data.shape
-        else:
-            error_data = np.copy(clean_data)         # create 0 iteration error data
-            for i in range(len(error_data)):
-                x = random.randint(20, 40)
-                y = random.randint(20, 40)
-                error_data[i, 0,  x, y] = get_flip_error(error_data[i, 0, x, y])
-
+        # Add error data
         self.data.append( error_data )
         self.targets.append(np.ones((error_data.shape[0], 1)))
+
+        # Add clean data
         self.data.append( clean_data[0:error_data.shape[0]] )
         self.targets.append(np.zeros((error_data.shape[0], 1)))
 
@@ -63,9 +39,9 @@ class HeatDistDataset(torch.utils.data.Dataset):
         return self.data.size(0)
 
 
-class CNN(nn.Module):
+class FlashNet(nn.Module):
     def __init__(self):
-        super(CNN, self).__init__()
+        super(FlashNet, self).__init__()
         self.conv = nn.Sequential(
             nn.Conv2d(1, 64, kernel_size=(6, 6), stride=(1, 1), padding=(2, 2)),
             nn.ReLU(),
@@ -106,14 +82,14 @@ class CNN(nn.Module):
         output_size = conv_output.data.view(BATCH_SIZE, -1).size(1)
         return output_size
 
-def training(model, train_loader):
+def training(model, train_loader, epochs=5):
     optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
     #optimizer = torch.optim.SGD(model.parameters(), lr = 1e-6, momentum=0.5)
     #optimizer = torch.optim.RMSprop(model.parameters(), lr=0.0001)
     loss_func = nn.BCELoss()
 
     running_loss = 0
-    for epoch in range(5):
+    for epoch in range(epochs):
         for i, data in enumerate(train_loader):
             inputs, labels = data
             if torch.cuda.is_available():
@@ -156,51 +132,4 @@ def evaluating(model, test_loader):
     fp = false_positive / len(test_loader.dataset)
     fn = false_negative / len(test_loader.dataset)
     print("acc: %s fp: %s fn: %s" %(acc, fp, fn))
-
-
-if __name__ == "__main__":
-    model_file = "./alex_train_0.model"
-    model = None
-    if os.path.isfile(model_file):
-        print "Load existing model"
-        model = torch.load(model_file)
-    else:
-        model = CNN().double()
-        if torch.cuda.is_available():
-            print "Have CUDA!!!"
-            model = model.cuda()
-        if torch.cuda.device_count() > 1:
-            print "More than one GPU card!!!"
-            model = nn.DataParallel(model)
-
-    print model
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-t", "--train_file", help="Train the model")
-    parser.add_argument("-s", "--evaluating_file", help="Evaluating the model with single file")
-    parser.add_argument("-m", "--evaluating_path", help="Evaluating the model with multiple files")
-    args = parser.parse_args()
-
-    clean_data_file = "/home/chenw/sources/aletheia/detector/FlashDetector/data/Sedov/clean.npy"
-
-    if args.train_file:
-        print("Training...")
-        trainset = HeatDistDataset(clean_data_file, args.train_file)
-        train_loader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE, shuffle=True, num_workers=8)
-        testset = HeatDistDataset(clean_data_file, args.train_file)
-        test_loader = torch.utils.data.DataLoader(testset, batch_size=128, shuffle=False, num_workers=8)
-        training(model, train_loader)
-        torch.save(model, model_file)
-        evaluating(model, test_loader)
-    elif args.evaluating_file:
-        print("Evaluating with a signle file...")
-        testset = HeatDistDataset(clean_data_file, args.evaluating_file)
-        test_loader = torch.utils.data.DataLoader(testset, batch_size=128, shuffle=False, num_workers=8)
-        evaluating(model, test_loader)
-    elif args.evaluating_path:
-        print("Evaluating with multiple files...")
-        for error_data_file in glob.iglob(args.evaluating_path+"/*.npy"):
-            testset = HeatDistDataset(clean_data_file, error_data_file)
-            test_loader = torch.utils.data.DataLoader(testset, batch_size=128, shuffle=False, num_workers=8)
-            evaluating(model, test_loader)
 

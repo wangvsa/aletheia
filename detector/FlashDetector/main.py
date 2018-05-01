@@ -1,113 +1,87 @@
-import sys
-import argparse
-import classifier
 import numpy as np
+import glob, os, math, random, argparse
+import torch, torchvision
+from bits import bit_flip
+import alex
+from alex import FlashDataset, FlashNet
+BATCH_SIZE = 64
 
-DETECTOR_DATA_DIR = "/home/wangchen/Sources/aletheia/detector/FlashDetector/data/"
-FLASH_APP_DIR = "/home/wangchen/Sources/FLASH4.4/objects/"
-FLASH_APPS = ["Blast2", "BlastBS", "BrioWu", "Cellular",
-        "DMReflection", "RHD_Sod", "Sedov", "Sod"]
+def get_flip_error(val):
+    while True:
+        pos = random.randint(0, 20)
+        error =  bit_flip(val, pos)
+        if not math.isnan(error) and not math.isinf(error):
+            break
+    error = min(10e+3, error)
+    error = max(-10e+3, error)
+    return error
 
-def fun_train(app, N):
-    data_dir = DETECTOR_DATA_DIR + "train/"+app
-    model_file = app + ".h5"        # existing model file
-    classifier.train(model_file, data_dir, N, epochs=10)
-    classifier.evaluation(model_file, data_dir)
-    return 0
+def read_data(filename):
+    data = np.load(filename)
+    if data.ndim == 3:      # (N, nx, ny)
+        data = np.expand_dims(data, axis=1)    # (N, channels, nx, ny)
+    print(filename, data.shape)
+    return data
 
-def fun_train_multi():
-    error_data_dir = FLASH_APP_DIR + "Sod_multi/data/"
-    clean_data_dir = FLASH_APP_DIR + "Sod/"
+def create_0_propagation_dataset(clean_data):
+    error_data = np.copy(clean_data)
+    for i in range(len(error_data)):
+        x = random.randint(20, 40)
+        y = random.randint(20, 40)
+        error_data[i, 0, x, y] = get_flip_error(error_data[i, 0, x, y])
+    print("0-propagation dataset:", error_data.shape)
+    return error_data
 
-    model_file = "Sod_multi.h5"        # existing model file
-
-    # Get train_X and train_y
-    import preprocess
-    import glob
-    import random
-
-    clean_X = preprocess.read_hdf5_dataset(clean_data_dir)
-    clean_X, clean_y = preprocess.preprocess_for_classifier(clean_X, 1)
-
-    error_X = []
-    error_y = []
-    for filename in glob.iglob(error_data_dir+"*0001"):
-        step = int(filename.split(',')[0].split('[')[1])
-        step = step + int(filename.split('_')[-1])
-
-        blockId = int(filename.split(',')[1].replace(' ', ''))
-        print filename, blockId
-
-        frame = preprocess.hdf5_to_numpy(filename)
-        if frame.shape[0] > blockId:
-            block = frame[blockId]
-            if np.isnan(block).any() or np.isinf(block).any() or np.max(block) > 100:
-                continue
-            else:
-                # Append error data
-                std = np.std(block)
-                if std == 0 : std = np.max(block)
-                block = block / std
-                error_X.append(block)
-                error_y.append(1)
-
-                # Append clean data
-                '''
-                step_str = ("0000"+str(step))[-4:]
-                clean_frame = preprocess.hdf5_to_numpy(clean_data_dir + "sod_hdf5_plt_cnt_" + step_str)
-                if clean_frame.shape[0] > blockId:
-                    clean_block = clean_frame[blockId]
-                    std = np.std(clean_block)
-                    if std == 0 : std = np.max(block)
-                    clean_block = clean_block / std
-                    train_X.append(clean_block)
-                    train_y.append(0)
-                '''
-
-    print clean_X.shape
-    train_X = np.vstack((clean_X, np.array(error_X)))
-    train_y = np.concatenate((clean_y, np.array(error_y)))
-    train_X = train_X.reshape(train_X.shape+(1,))
-    classifier.train_multi(model_file, train_X, train_y)
-
-
-def fun_test(app):
-    data_dir = DETECTOR_DATA_DIR + "test/"+app
-    model_file = app + ".h5"        # existing model file
-    classifier.evaluation(model_file, data_dir)
-    return 0
-
-def fun_testall():
-    for app in FLASH_APPS:
-        print "Testing", app
-        fun_test(app)
-    return 0
-
-
+def load_model(model_file):
+    model = None
+    if os.path.isfile(model_file):
+        print "Load existing model"
+        model = torch.load(model_file)
+    else:
+        model = FlashNet().double()
+        if torch.cuda.is_available():
+            print "Have CUDA!!!"
+            model = model.cuda()
+        if torch.cuda.device_count() > 1:
+            print "More than one GPU card!!!"
+            model = nn.DataParallel(model)
+    print model
+    return model
 
 if __name__ == "__main__":
 
-    # allow three actions: {train, test, testall}
+    model_file = "./sedov_train_0.model"
+    model = load_model(model_file)
+
     parser = argparse.ArgumentParser()
-    sp = parser.add_subparsers(dest="action")
-    sp_train = sp.add_parser("train", help="train a model")
-    sp_train_multi = sp.add_parser("trainmulti", help="train a model")
-    sp_test = sp.add_parser("test", help="test a model")
-    sp_testall = sp.add_parser("testall", help="test all available models")
-
-    # arguments for action "train"
-    sp_train.add_argument("app", help="the app's name", choices=FLASH_APPS)
-    sp_train.add_argument("--N", help="duplicate N times of dataset for training", type=int, default=1)
-
-    # arguments for action "test"
-    sp_test.add_argument("app", help="the app's name", choices=FLASH_APPS)
-
+    parser.add_argument("-t", "--train_file", help="Train the model")
+    parser.add_argument("-s", "--evaluating_file", help="Evaluating the model with single file")
+    parser.add_argument("-m", "--evaluating_path", help="Evaluating the model with multiple files")
     args = parser.parse_args()
-    if args.action == "train":
-        fun_train(args.app, args.N)
-    elif args.action == "trainmulti":
-        fun_train_multi()
-    elif args.action == "test":
-        fun_test(args.app)
-    elif args.action == "testall":
-        fun_testall()
+
+    if args.train_file:     # Train with 0-propagation dataset
+        print("Training 0-propagation ...")
+        # Training
+        clean_data = read_data(args.train_file)
+        error_data = create_0_propagation_dataset(clean_data)
+        trainset = FlashDataset(clean_data, error_data)
+        train_loader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE, shuffle=True, num_workers=8)
+        alex.training(model, train_loader, epochs=5)
+        torch.save(model, model_file)
+        # Testing
+        error_data = create_0_propagation_dataset(clean_data)
+        testset = FlashDataset(clean_data, error_data)
+        test_loader = torch.utils.data.DataLoader(testset, batch_size=128, shuffle=False, num_workers=8)
+        alex.evaluating(model, test_loader)
+    elif args.evaluating_file:
+        print("Evaluating with a signle file...")
+        testset = FlashDataset(clean_data_file, args.evaluating_file)
+        test_loader = torch.utils.data.DataLoader(testset, batch_size=128, shuffle=False, num_workers=8)
+        evaluating(model, test_loader)
+    elif args.evaluating_path:
+        print("Evaluating with multiple files...")
+        for error_data_file in glob.iglob(args.evaluating_path+"/*.npy"):
+            testset = FlashDataset(clean_data_file, error_data_file)
+            test_loader = torch.utils.data.DataLoader(testset, batch_size=128, shuffle=False, num_workers=8)
+            alex.evaluating(model, test_loader)
+

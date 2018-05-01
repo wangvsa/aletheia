@@ -68,9 +68,9 @@ def get_clean_data(data_dir, rows, cols, overlap):
         dens_blocks = split_to_windows(dens, rows, cols, overlap)  #shape of (N, rows, cols)
         temp_blocks = split_to_windows(temp, rows, cols, overlap)
         pres_blocks = split_to_windows(pres, rows, cols, overlap)
-        dens_blocks /= np.std(dens_blocks, axis=0)
-        temp_blocks /= np.std(temp_blocks, axis=0)
-        pres_blocks /= np.std(pres_blocks, axis=0)
+        #dens_blocks /= np.std(dens_blocks, axis=0)
+        #temp_blocks /= np.std(temp_blocks, axis=0)
+        #pres_blocks /= np.std(pres_blocks, axis=0)
 
         # combile to 3 channels, shape of (N, 3, rows, cols)
         tmp = np.swapaxes( np.array([dens_blocks, temp_blocks, pres_blocks]), 0, 1)
@@ -82,11 +82,28 @@ def get_clean_data(data_dir, rows, cols, overlap):
     output_file = data_dir.split('/')[-2]
     np.save(output_file, dataset)
 
+def get_dens_clean_data(data_dir, rows, cols, overlap):
+    dataset = []
+    count = 0
+    for filename in glob.iglob(data_dir+"/*_hdf5_plt_cnt_*"):
+        if count < 200:
+            dens = hdf5_to_numpy(filename, 'dens')
+            dens_blocks = split_to_windows(dens, rows, cols, overlap)  #shape of (N, rows, cols)
+            print(filename, dens_blocks.shape)
+            dataset.append(dens_blocks)
+        count += 1
+    dataset = np.vstack(dataset)
+    print "dataset shape:", dataset.shape
+    np.save("clean.npy", dataset)
+
+
 def test_min_max(data_dir):
     for filename in glob.iglob(data_dir+"/*.npy"):
         data = np.load(filename)
         print filename, data.shape, ', min:', np.unravel_index(np.argmin(data), data.shape), 'max:',  np.unravel_index(np.argmax(data), data.shape)
 
 #get_clean_data(sys.argv[1], 60, 60, 20)
-get_error_data(sys.argv[1], 60, 60, 20)
+#get_error_data(sys.argv[1], 60, 60, 20)
 #test_min_max(sys.argv[1])
+
+get_dens_clean_data(sys.argv[1], 60, 60, 20)
