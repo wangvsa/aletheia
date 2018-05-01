@@ -4,7 +4,7 @@
 
 #include "hdf5.h"
 
-#define DATASETNAME "DATA" 
+#define DATASETNAME "dens" 
 #define RANK  2
 
 
