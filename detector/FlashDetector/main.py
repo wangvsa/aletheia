@@ -1,6 +1,7 @@
 import numpy as np
 import glob, os, math, random, argparse
 import torch, torchvision
+import torch.nn as nn
 from bits import bit_flip
 import alex
 from alex import FlashDataset, FlashNet

@@ -10,7 +10,7 @@ import argparse
 from bits import bit_flip
 
 BATCH_SIZE = 64
-variables = ['temp']
+variables = ['dens']
 CONV_INPUT_SHAPE = (len(variables), 60, 60)
 
 
@@ -43,31 +43,42 @@ class FlashNet(nn.Module):
     def __init__(self):
         super(FlashNet, self).__init__()
         self.conv = nn.Sequential(
-            nn.Conv2d(1, 64, kernel_size=(6, 6), stride=(1, 1), padding=(2, 2)),
+            nn.Conv2d(len(variables), 64, 5, stride=1),
+            nn.BatchNorm2d(64),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=(3, 3), stride=(2, 2), dilation=(1, 1), ceil_mode=False),
-            nn.Conv2d(64, 192, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2)),
+            nn.MaxPool2d(3, stride=1),
+
+            nn.Conv2d(64, 64, 3, stride=1),
+            nn.BatchNorm2d(64),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=(3, 3), stride=(2, 2), dilation=(1, 1), ceil_mode=False),
-            nn.Conv2d(192, 384, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+            nn.MaxPool2d(3, stride=1),
+
+            nn.Conv2d(64, 96, 3, stride=1),
+            nn.BatchNorm2d(96),
             nn.ReLU(),
-            nn.Conv2d(384, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+            nn.Conv2d(96, 96, 3, stride=2),
+            nn.BatchNorm2d(96),
             nn.ReLU(),
-            nn.Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1)),
+
+            nn.Conv2d(96, 64, 3, stride=2),
+            nn.BatchNorm2d(64),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=(3, 3), stride=(2, 2), dilation=(1, 1), ceil_mode=False),
+            nn.Conv2d(64, 32, 3, stride=1),
+            nn.BatchNorm2d(32),
+            nn.ReLU(),
+            nn.MaxPool2d(3, stride=1)
         )
         conv_output_size = self.get_conv_output_size()
         print "conv output size: ", conv_output_size
         self.fc = nn.Sequential(
+            nn.Linear(in_features=conv_output_size, out_features=768, bias=True),
+            nn.ReLU(),
             nn.Dropout(p=0.5),
-            nn.Linear(in_features=9216, out_features=1, bias=True),
-            #nn.ReLU(),
-            #nn.Dropout(p=0.5),
-            #nn.Linear(in_features=4096, out_features=4096, bias=True),
-            #nn.ReLU(),
-            #nn.Linear(in_features=4096, out_features=1, bias=True),
-            nn.Sigmoid(),
+            nn.Linear(768, 512),
+            nn.ReLU(),
+            nn.Dropout(p=0.5),
+            nn.Linear(512, 1),
+            nn.Sigmoid()
         )
     def forward(self, x):
         x = self.conv.forward(x)
