@@ -84,14 +84,11 @@ def get_clean_data(data_dir, rows, cols, overlap):
 
 def get_dens_clean_data(data_dir, rows, cols, overlap):
     dataset = []
-    count = 0
     for filename in glob.iglob(data_dir+"/*_hdf5_plt_cnt_*"):
-        if count < 200:
-            dens = hdf5_to_numpy(filename, 'dens')
-            dens_blocks = split_to_windows(dens, rows, cols, overlap)  #shape of (N, rows, cols)
-            print(filename, dens_blocks.shape)
-            dataset.append(dens_blocks)
-        count += 1
+        dens = hdf5_to_numpy(filename, 'dens')
+        dens_blocks = split_to_windows(dens, rows, cols, overlap)  #shape of (N, rows, cols)
+        print(filename, dens_blocks.shape)
+        dataset.append(dens_blocks)
     dataset = np.vstack(dataset)
     print "dataset shape:", dataset.shape
     np.save("clean.npy", dataset)
