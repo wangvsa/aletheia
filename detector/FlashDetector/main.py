@@ -76,11 +76,11 @@ if __name__ == "__main__":
         alex.evaluating(model, test_loader)
     elif args.evaluating_file:
         print("Evaluating with a signle file...")
-        clean_data = read_data(args.train_file)
+        clean_data = read_data(args.evaluating_file)
         error_data = create_0_propagation_dataset(clean_data)
         testset = FlashDataset(clean_data, error_data)
         test_loader = torch.utils.data.DataLoader(testset, batch_size=128, shuffle=False, num_workers=8)
-        evaluating(model, test_loader)
+        alex.evaluating(model, test_loader)
     elif args.evaluating_path:
         print("Evaluating with multiple files...")
         for error_data_file in glob.iglob(args.evaluating_path+"/*.npy"):
