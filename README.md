@@ -1,1 +1,1 @@
-# alethia
+# alethia./comparisons: source code for other methods (AID, SSD)
