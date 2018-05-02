@@ -1,24 +1,20 @@
 #ifndef BITS_H
 #define BITS_H
 
-#include <cstring>
+#include <stdint.h>
+#include <string.h>
+#include <stdlib.h>
 #include <stdio.h>
-#include <iostream>
-#include <bitset>
-using namespace std;
 
-void doubleToBinary(double d, string &str) {
+void doubleToBinary(double d, char *p) {
     union { double d; uint64_t i; } u;
     u.d = d;
-    str.clear();
-    for (int i = 0; i < 64; i++) {
-        if (u.i % 2)  str.push_back('1');
-        else str.push_back('0');
+    int i;
+    for (i = 0; i < 64; i++) {
+        if (u.i % 2)  p[63-i] = '1';
+        else p[63-i] = '0';
         u.i >>= 1;
     }
-    // Reverse the string since now it's backwards
-    string temp(str.rbegin(), str.rend());
-    str = temp;
 }
 
 double binaryToDouble(const char* p) {
@@ -31,18 +27,15 @@ double binaryToDouble(const char* p) {
     return d;
 }
 
-double binaryToDouble(string &str) {
-    return binaryToDouble(str.c_str());
-}
-
 double bit_flip(double d, int pos) {
-    string str;
-    doubleToBinary(d, str);
-    if(str[pos] == '1')
-        str[pos] = '0';
+    char p[65] = {0};
+    doubleToBinary(d, p);
+    printf("%s\n", p);
+    if(p[pos] == '1')
+        p[pos] = '0';
     else
-        str[pos] = '1';
-    double error = binaryToDouble(str);
+        p[pos] = '1';
+    double error = binaryToDouble(p);
     return error;
 }
 
