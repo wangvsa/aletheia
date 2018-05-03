@@ -9,7 +9,7 @@ args:
     it: which iteration's data to read
 '''
 def read_data(prefix, it, var_name="dens"):
-    filename = prefix + ("0000"+str(it))[-4:] + ".h5"
+    filename = prefix + ("0000"+str(it))[-4:]
     f = h5py.File(filename)
     data = f[var_name][:]
     if data.ndim != 2:       # Flash applications

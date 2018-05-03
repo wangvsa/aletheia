@@ -15,7 +15,9 @@ from skimage.util.shape import view_as_windows, view_as_blocks
 def hdf5_to_numpy(filename, var_name="dens"):
     f = h5py.File(filename, 'r')
     # Stack a shape of (1, 1, ny, nx) to shape (ny, nx)
-    data = f[var_name][0, 0]
+    data = f[var_name][:]
+    if data.ndim == 4:      # Flash applications
+        data = data[0, 0]
     return data
 
 def split_to_windows(frame, rows, cols, overlap):
@@ -84,14 +86,15 @@ def get_clean_data(data_dir, rows, cols, overlap):
 
 def get_dens_clean_data(data_dir, rows, cols, overlap):
     dataset = []
-    for filename in glob.iglob(data_dir+"/*_hdf5_plt_cnt_*"):
+    for filename in glob.iglob(data_dir+"/*.h5"):
         dens = hdf5_to_numpy(filename, 'dens')
+        print(dens.shape)
         dens_blocks = split_to_windows(dens, rows, cols, overlap)  #shape of (N, rows, cols)
         print(filename, dens_blocks.shape)
         dataset.append(dens_blocks)
     dataset = np.vstack(dataset)
     print "dataset shape:", dataset.shape
-    np.save("clean.npy", dataset)
+    np.save("tea_clean.npy", dataset)
 
 
 def test_min_max(data_dir):

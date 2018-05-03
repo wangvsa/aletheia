@@ -30,7 +30,7 @@ double binaryToDouble(const char* p) {
 double bit_flip(double d, int pos) {
     char p[65] = {0};
     doubleToBinary(d, p);
-    printf("%s\n", p);
+    //printf("%s\n", p);
     if(p[pos] == '1')
         p[pos] = '0';
     else

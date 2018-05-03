@@ -59,14 +59,13 @@ def test_0_recall(prefix):
 
         print("it:", it, " recall:", recall, " fp:", aid.fp)
 
-# Perform the detection on clean data to get false positive rate
 def test_k_recall(restart_iter, clean_prefix, error_prefix):
-    delay = 6
+    delay = 11
     recall = np.zeros(delay)
 
     aid = AdaptiveDetector()
     aid.it = 0
-    aid.fp = restart_iter / 2
+    aid.fp = 100
 
     # first read previous clean data
     d5 = read_data(clean_prefix, restart_iter-5)
@@ -111,24 +110,42 @@ def test_fp(prefix):
         d1 = d
         print("it:", it, " fp:", aid.fp)
 
-test_0_recall("/home/wangchen/Sources/mantevo/TeaLeaf/TeaLeaf_ref/clean/data_")
-#test_fp("/home/wangchen/Flash/Sedov/clean/sedov_hdf5_plt_cnt_")
-
+test_0_recall("/home/wangchen/Flash/BlastBS/clean/bshdf5_plt_cnt_")
+#test_0_recall("/home/wangchen/Sources/mantevo/CloverLeaf_Serial/clean/data_")
+#test_fp("/home/wangchen/Sources/mantevo/CloverLeaf_Serial/clean/data_")
 
 '''
 # test k iterations
 if __name__ == "__main__":
-    recall = np.zeros(6)
+    recall = np.zeros(11)
     total = 0
     # First find all restarting points
-    directory = "/home/wangchen/Flash/Sedov/"
+    directory = "/home/wangchen/Flash/BlastBS/"
     for filename in glob.iglob(directory+"*plt_cnt_0000"):
         restart_iter = int(filename.split("_")[1])
         error_prefix = filename[0:-4]
-        clean_prefix = directory + "clean/sedov_hdf5_plt_cnt_"
+        clean_prefix = directory + "clean/bshdf5_plt_cnt_"
         print(restart_iter, error_prefix)
         recall += test_k_recall(restart_iter, clean_prefix, error_prefix)
+        total += 1.0
+        print(recall)
+        print(recall/total)
+'''
 
-        total += 1
-    print(recall)
+'''
+# test k iterations for cloverleaf
+if __name__ == "__main__":
+    recall = np.zeros(11)
+    total = 0
+    # First find all restarting points
+    directory = "/home/wangchen/Sources/mantevo/CloverLeaf_Serial/"
+    for filename in glob.iglob(directory+"data/*_0000"):
+        restart_iter = 100
+        error_prefix = filename[0:-4]
+        clean_prefix = directory + "clean/data_"
+        print(restart_iter, error_prefix)
+        recall += test_k_recall(restart_iter, clean_prefix, error_prefix)
+        total += 1.0
+        print(recall)
+        print(recall/total)
 '''
