@@ -1,6 +1,7 @@
 import random
 import math
 import numpy as np
+import os
 from data_reader import read_data
 from aid import AdaptiveDetector
 from bits import bit_flip
@@ -59,13 +60,12 @@ def test_0_recall(prefix):
 
         print("it:", it, " recall:", recall, " fp:", aid.fp)
 
-def test_k_recall(restart_iter, clean_prefix, error_prefix):
-    delay = 11
+def test_k_recall(restart_iter, delay, clean_prefix, error_prefix):
     recall = np.zeros(delay)
 
     aid = AdaptiveDetector()
     aid.it = 0
-    aid.fp = 100
+    aid.fp = 200
 
     # first read previous clean data
     d5 = read_data(clean_prefix, restart_iter-5)
@@ -110,27 +110,29 @@ def test_fp(prefix):
         d1 = d
         print("it:", it, " fp:", aid.fp)
 
-test_0_recall("/home/wangchen/Flash/BlastBS/clean/bshdf5_plt_cnt_")
+#test_0_recall("/home/wangchen/Flash/OrszagTang/clean/orszag_mhd_2d_hdf5_plt_cnt_")
 #test_0_recall("/home/wangchen/Sources/mantevo/CloverLeaf_Serial/clean/data_")
 #test_fp("/home/wangchen/Sources/mantevo/CloverLeaf_Serial/clean/data_")
 
-'''
 # test k iterations
 if __name__ == "__main__":
-    recall = np.zeros(11)
+    delay = 11
+    recall = np.zeros(delay)
     total = 0
     # First find all restarting points
-    directory = "/home/wangchen/Flash/BlastBS/"
+    directory = "/home/wangchen/Flash/OrszagTang/"
     for filename in glob.iglob(directory+"*plt_cnt_0000"):
-        restart_iter = int(filename.split("_")[1])
-        error_prefix = filename[0:-4]
-        clean_prefix = directory + "clean/bshdf5_plt_cnt_"
-        print(restart_iter, error_prefix)
-        recall += test_k_recall(restart_iter, clean_prefix, error_prefix)
-        total += 1.0
-        print(recall)
-        print(recall/total)
-'''
+        last_one = filename[:-4] + "0011"
+        if os.path.isfile(last_one):
+            restart_iter = int(filename.split("_")[1])
+            error_prefix = filename[0:-4]
+            clean_prefix = directory + "clean/orszag_mhd_2d_hdf5_plt_cnt_"
+            print(restart_iter, error_prefix)
+            recall += test_k_recall(restart_iter, delay, clean_prefix, error_prefix)
+            total += 1.0
+            print(recall)
+            print(recall/total)
+
 
 '''
 # test k iterations for cloverleaf

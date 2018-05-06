@@ -36,15 +36,15 @@ def modify_par_file(data_dir, basenm, restart_point):
 
     pars = flash_par.read_par_file(par_file)
     pars['basenm'] = "\""+basenm+"\""
-    #pars['nend'] = str(restart_point+9)
-    pars['nend'] = str(999)
+    pars['nend'] = str(restart_point+10)
+    #pars['nend'] = str(999)
     pars['checkpointFileNumber'] = str(restart_point)
     pars['restart'] = ".true."
 
     # output plot file is enough
     # no need to ouput checkpoint file
     pars['checkpointFileIntervalStep'] = "0"
-    pars['plotfileIntervalStep'] = "0"
+    pars['plotfileIntervalStep'] = "1"
     pars['ignoreForcedPlot'] = ".true."
 
     new_par_file = data_dir + "/flash." + basenm + ".new_par" # remove the last _, "new_par" just easy for my pbs script to handle
@@ -62,7 +62,7 @@ def insert_errors(data_dir, restart_point):
     filenumber = ("0000"+str(restart_point))[-4:]
     basenm = "error_%s_" %(restart_point) + str(int(time.time()*1000))
     clean_data_dir =  data_dir + "/clean/"
-    clean_checkpoint_file = clean_data_dir + "sod_hdf5_chk_"+filenumber
+    clean_checkpoint_file = clean_data_dir + "dmr_hdf5_chk_"+filenumber
     corrupted_checkpoint_file = data_dir + basenm + "hdf5_chk_" + filenumber
 
     # Copy a corrupted checkpoint file
@@ -95,7 +95,7 @@ def insert_error(data_dir, restart_point):
     basenm = "error_%s_%s_%s_%s" %(restart_point, error_win_id, x, y)
 
     clean_data_dir =  data_dir + "/clean/"
-    clean_checkpoint_file = clean_data_dir + "sod_hdf5_chk_"+filenumber
+    clean_checkpoint_file = clean_data_dir + "dmr_hdf5_chk_"+filenumber
 
     corrupted_checkpoint_file = data_dir + basenm + "hdf5_chk_" + filenumber
 
@@ -110,7 +110,7 @@ def insert_error(data_dir, restart_point):
     return basenm
 
 def restart(data_dir):
-    for restart_point in range(500, 600, 10): # 0~200, step=20
+    for restart_point in range(100, 600, 5): # 0~200, step=20
         basename = insert_error(data_dir, restart_point)
         #basename = insert_errors(data_dir, restart_point)
         new_par_file = modify_par_file(data_dir, basename, restart_point)
