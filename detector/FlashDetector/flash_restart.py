@@ -110,9 +110,9 @@ def insert_error(data_dir, restart_point):
     return basenm
 
 def restart(data_dir):
-    for restart_point in range(100, 600, 5): # 0~200, step=20
-        basename = insert_error(data_dir, restart_point)
-        #basename = insert_errors(data_dir, restart_point)
+    for restart_point in range(100, 600, 10): # 0~200, step=20
+        #basename = insert_error(data_dir, restart_point)
+        basename = insert_errors(data_dir, restart_point)
         new_par_file = modify_par_file(data_dir, basename, restart_point)
         print(new_par_file)
 

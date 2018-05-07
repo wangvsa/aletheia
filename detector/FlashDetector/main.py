@@ -5,7 +5,9 @@ import torch.nn as nn
 from bits import bit_flip
 import alex
 from alex import FlashDataset, FlashNet
+
 BATCH_SIZE = 64
+USE_GPU = False
 
 def get_flip_error(val):
     while True:
@@ -37,13 +39,16 @@ def load_model(model_file):
     model = None
     if os.path.isfile(model_file):
         print "Load existing model"
-        model = torch.load(model_file)
+        if not USE_GPU:    # Load model to CPU (trained on multiple GPUs),
+            model = torch.load(model_file, map_location="cpu").module
+        else:
+            model = torch.load(model_file)
     else:
         model = FlashNet().double()
-        if torch.cuda.is_available():
+        if torch.cuda.is_available() and USE_GPU:
             print "Have CUDA!!!"
             model = model.cuda()
-        if torch.cuda.device_count() > 1:
+        if torch.cuda.device_count() > 1 and USE_GPU:
             print "More than one GPU card!!!"
             model = nn.DataParallel(model)
     print model
@@ -51,7 +56,7 @@ def load_model(model_file):
 
 if __name__ == "__main__":
 
-    model_file = "./dmr_train_0.model"
+    model_file = "./sedov_train_0.model"
     model = load_model(model_file)
 
     parser = argparse.ArgumentParser()
@@ -69,23 +74,23 @@ if __name__ == "__main__":
         #error_data = read_data(args.train_file)
         trainset = FlashDataset(clean_data, error_data)
         train_loader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE, shuffle=True, num_workers=8)
-        alex.training(model, train_loader, epochs=5)
+        alex.training(model, train_loader, epochs=5, use_gpu=USE_GPU)
         torch.save(model, model_file)
         # Testing
         error_data = create_0_propagation_dataset(clean_data)
         testset = FlashDataset(clean_data, error_data)
         test_loader = torch.utils.data.DataLoader(testset, batch_size=128, shuffle=False, num_workers=8)
-        alex.evaluating(model, test_loader)
+        alex.evaluating(model, test_loader, use_gpu=USE_GPU)
     elif args.evaluating_file:
         print("Evaluating with a signle file...")
-        #clean_data = read_data(args.evaluating_file)
-        #error_data = create_0_propagation_dataset(clean_data)
+        clean_data = read_data(args.evaluating_file)
+        error_data = create_0_propagation_dataset(clean_data)
         #clean_data = read_data("./data/Sedov/clean_1000iters_5step.npy")
-        clean_data = None
-        error_data = read_data(args.evaluating_file)
+        #clean_data = None
+        #error_data = read_data(args.evaluating_file)
         testset = FlashDataset(clean_data, error_data)
         test_loader = torch.utils.data.DataLoader(testset, batch_size=128, shuffle=False, num_workers=8)
-        alex.evaluating(model, test_loader)
+        alex.evaluating(model, test_loader, use_gpu=USE_GPU)
     elif args.evaluating_path:
         print("Evaluating with multiple files...")
         for error_data_file in glob.iglob(args.evaluating_path+"/*.npy"):

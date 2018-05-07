@@ -95,7 +95,7 @@ class FlashNet(nn.Module):
         output_size = conv_output.data.view(BATCH_SIZE, -1).size(1)
         return output_size
 
-def training(model, train_loader, epochs=5):
+def training(model, train_loader, epochs=5, use_gpu=True):
     optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
     #optimizer = torch.optim.SGD(model.parameters(), lr = 1e-6, momentum=0.5)
     #optimizer = torch.optim.RMSprop(model.parameters(), lr=0.0001)
@@ -105,7 +105,7 @@ def training(model, train_loader, epochs=5):
     for epoch in range(epochs):
         for i, data in enumerate(train_loader):
             inputs, labels = data
-            if torch.cuda.is_available():
+            if torch.cuda.is_available() and use_gpu:
                 inputs, labels = inputs.cuda(), labels.cuda()
             inputs, labels = Variable(inputs), Variable(labels)
             optimizer.zero_grad()
@@ -121,14 +121,14 @@ def training(model, train_loader, epochs=5):
                 print("epoch:%s i:%s loss:%s" %(epoch, i, running_loss/50))
                 running_loss = 0
 
-def evaluating(model, test_loader):
+def evaluating(model, test_loader, use_gpu=True):
     num_correct = 0.0
     true_positive = 0.0
     false_positive = 0.0
     false_negative = 0.0
     for i, data in enumerate(test_loader):
         inputs, labels = data
-        if torch.cuda.is_available():
+        if torch.cuda.is_available() and use_gpu:
             inputs, labels = inputs.cuda(), labels.cuda()
         inputs, labels = Variable(inputs), Variable(labels)
         output = model(inputs)
