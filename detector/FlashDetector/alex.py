@@ -24,8 +24,10 @@ class FlashDataset(torch.utils.data.Dataset):
         self.targets.append(np.ones((error_data.shape[0], 1)))
 
         # Add clean data
-        self.data.append( clean_data[0:error_data.shape[0]] )
-        self.targets.append(np.zeros((error_data.shape[0], 1)))
+        if clean_data is not None:
+            clean_data_size = min(error_data.shape[0], clean_data.shape[0])
+            self.data.append( clean_data[0:clean_data_size] )
+            self.targets.append(np.zeros((clean_data_size, 1)))
 
         self.data = np.vstack(self.data)
         self.targets = np.vstack(self.targets)
@@ -71,12 +73,12 @@ class FlashNet(nn.Module):
         conv_output_size = self.get_conv_output_size()
         print "conv output size: ", conv_output_size
         self.fc = nn.Sequential(
-            nn.Linear(in_features=conv_output_size, out_features=768, bias=True),
+            nn.Linear(in_features=conv_output_size, out_features=512, bias=True),
             nn.ReLU(),
             nn.Dropout(p=0.5),
-            nn.Linear(768, 512),
-            nn.ReLU(),
-            nn.Dropout(p=0.5),
+            #nn.Linear(768, 512),
+            #nn.ReLU(),
+            #nn.Dropout(p=0.5),
             nn.Linear(512, 1),
             nn.Sigmoid()
         )
@@ -121,6 +123,7 @@ def training(model, train_loader, epochs=5):
 
 def evaluating(model, test_loader):
     num_correct = 0.0
+    true_positive = 0.0
     false_positive = 0.0
     false_negative = 0.0
     for i, data in enumerate(test_loader):
@@ -133,6 +136,7 @@ def evaluating(model, test_loader):
         pred = (output.data >= 0.5).view(-1, 1)
         truth = (labels.data >= 0.5).view(-1, 1)
         num_correct += (pred == truth).sum()
+        true_positive += ((pred == truth) & pred ).sum()
         false_positive += ((pred^truth) & pred).sum()
         false_negative += ((pred^truth) & truth).sum()
 
@@ -140,7 +144,8 @@ def evaluating(model, test_loader):
             print i, num_correct, false_positive, false_negative
 
     acc = num_correct / len(test_loader.dataset)
+    recall = true_positive / (true_positive+false_negative)
     fp = false_positive / len(test_loader.dataset)
     fn = false_negative / len(test_loader.dataset)
-    print("acc: %s fp: %s fn: %s" %(acc, fp, fn))
+    print("recall: %s acc: %s fp: %s fn: %s" %(recall, acc, fp, fn))
 

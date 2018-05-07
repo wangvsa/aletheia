@@ -51,7 +51,7 @@ def load_model(model_file):
 
 if __name__ == "__main__":
 
-    model_file = "./sedov_train_0.model"
+    model_file = "./dmr_train_0.model"
     model = load_model(model_file)
 
     parser = argparse.ArgumentParser()
@@ -65,6 +65,8 @@ if __name__ == "__main__":
         # Training
         clean_data = read_data(args.train_file)
         error_data = create_0_propagation_dataset(clean_data)
+        #clean_data = read_data("./data/DMReflection/clean_1000iters_5step.npy")
+        #error_data = read_data(args.train_file)
         trainset = FlashDataset(clean_data, error_data)
         train_loader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE, shuffle=True, num_workers=8)
         alex.training(model, train_loader, epochs=5)
@@ -76,8 +78,11 @@ if __name__ == "__main__":
         alex.evaluating(model, test_loader)
     elif args.evaluating_file:
         print("Evaluating with a signle file...")
-        clean_data = read_data(args.evaluating_file)
-        error_data = create_0_propagation_dataset(clean_data)
+        #clean_data = read_data(args.evaluating_file)
+        #error_data = create_0_propagation_dataset(clean_data)
+        #clean_data = read_data("./data/Sedov/clean_1000iters_5step.npy")
+        clean_data = None
+        error_data = read_data(args.evaluating_file)
         testset = FlashDataset(clean_data, error_data)
         test_loader = torch.utils.data.DataLoader(testset, batch_size=128, shuffle=False, num_workers=8)
         alex.evaluating(model, test_loader)
