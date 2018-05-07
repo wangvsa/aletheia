@@ -80,10 +80,10 @@ class AdaptiveDetector:
     0: lcf, 1: qcf, 2: ccf
     '''
     def select_best_order(self, d, d1, d2, d3, d4, d5):
-        simple_error = np.abs(self.simple(d1) - d)
-        lcf_error = np.sum(np.abs(self.lcf(d1, d2) - d))
-        qcf_error = np.sum(np.abs(self.qcf(d1, d2, d3) - d))
-        ccf_error = np.sum(np.abs(self.ccf(d1, d2, d3, d4) - d))
+        simple_error = np.abs(self.simple(d2) - d1)
+        lcf_error = np.sum(np.abs(self.lcf(d2, d3) - d1))
+        qcf_error = np.sum(np.abs(self.qcf(d2, d3, d4) - d1))
+        ccf_error = np.sum(np.abs(self.ccf(d2, d3, d4, d5) - d1))
         order = np.argmin([lcf_error, qcf_error, ccf_error])
         return order
 
